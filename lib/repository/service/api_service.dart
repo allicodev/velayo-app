@@ -1,0 +1,78 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:velayo_flutterapp/repository/models/env/env.dart';
+import 'package:velayo_flutterapp/utilities/api_status.dart';
+import 'package:velayo_flutterapp/utilities/constant.dart';
+
+class APIServices {
+  static Future<Object> get(
+      {String? externalUrl,
+      required String endpoint,
+      Map<String, dynamic>? query}) async {
+    try {
+      var url = Uri.parse(externalUrl ?? "$BASE_URL$endpoint")
+          .replace(queryParameters: query);
+      var response = await http.get(url, headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${Env.Token}}',
+        // 'app-sprint-version':
+        //     await getVersionName(),
+        'app-device-platform': 'android'
+      });
+      if ([200, 201].contains(response.statusCode)) {
+        return Success(
+            code: response.statusCode, response: jsonDecode(response.body));
+      } else {
+        return Failure(
+            code: response.statusCode, response: jsonDecode(response.body));
+      }
+    } on HttpException {
+      return Failure(code: 101, response: {"message": 'No Internet'});
+    } on FormatException {
+      return Failure(code: 102, response: {"message": 'Invalid Format'});
+    } catch (e) {
+      print("API SERVICE ERROR");
+      print(e);
+      return Failure(code: 103, response: {"message": 'Unknown Error'});
+    }
+  }
+
+  static Future<Object> post({
+    required String endpoint,
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      var url = Uri.parse("$BASE_URL$endpoint");
+
+      http.Response response;
+
+      var request = http.MultipartRequest("POST", url);
+      request.headers['Authorization'] = 'Bearer ${Env.Token}';
+      payload.forEach((key, value) {
+        if (value != null) {
+          request.fields[key] = value is Iterable<dynamic> || value is Map
+              ? jsonEncode(value)
+              : value.toString();
+        }
+      });
+
+      response = await http.Response.fromStream(await request.send());
+
+      if (response.statusCode == 200) {
+        return Success(code: 200, response: jsonDecode(response.body));
+      } else {
+        return Failure(
+            code: response.statusCode, response: jsonDecode(response.body));
+      }
+    } on HttpException {
+      return Failure(code: 101, response: {"message": 'No Internet'});
+    } on FormatException {
+      return Failure(code: 102, response: {"message": 'Invalid Format'});
+    } catch (e) {
+      print("API SERVICE ERROR");
+      print(e);
+      return Failure(code: 103, response: {"message": 'Unknown Error'});
+    }
+  }
+}

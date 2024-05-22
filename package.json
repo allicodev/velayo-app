@@ -1,0 +1,16 @@
+{
+  "name": "velayo_flutterapp",
+  "version": "1.0.0",
+  "description": "A new Flutter project.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "clean": "flutter pub run build_runner clean",
+    "build": "flutter pub run build_runner build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
