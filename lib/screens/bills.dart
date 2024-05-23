@@ -234,9 +234,11 @@ class _BillsState extends State<Bills> {
         children: [
           Button(
             label: "BACK",
+            fontSize: 25,
             icon: Icons.chevron_left_rounded,
-            textColor: Colors.black45,
-            width: 120,
+            textColor: Colors.black87,
+            width: 170,
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
             onPress: () => setState(() => selectedBiller = ""),
           ),
           if (formFields != null && formFields.isNotEmpty)

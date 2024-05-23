@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:velayo_flutterapp/screens/bills.dart';
+import 'package:velayo_flutterapp/screens/load_screen.dart';
+import 'package:velayo_flutterapp/screens/shopee_collect_screen.dart';
 import 'package:velayo_flutterapp/screens/wallet.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
 import 'package:velayo_flutterapp/widgets/home_button.dart';
@@ -38,6 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
               )),
           if (selectedTransaction == "bills payment") const Bills(),
           if (selectedTransaction == "e-money") const Wallets(),
+          if (selectedTransaction == "load") const LoadScreen(),
+          if (selectedTransaction == "shopee collect")
+            const ShopeeCollectScreen()
         ]));
   }
 

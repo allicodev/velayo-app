@@ -237,9 +237,11 @@ class _WalletsState extends State<Wallets> {
         children: [
           Button(
             label: "BACK",
+            fontSize: 25,
             icon: Icons.chevron_left_rounded,
-            textColor: Colors.black45,
-            width: 120,
+            textColor: Colors.black87,
+            width: 170,
+            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
             onPress: () => setState(() {
               selectedWallet = "";
               selectedWalletType = "";
@@ -299,12 +301,14 @@ class _WalletsState extends State<Wallets> {
   Widget showSelectedWalletType(Wallet _wallet) {
     return Container(
       width: MediaQuery.of(context).size.width * 0.75,
-      margin: const EdgeInsets.only(top: 15),
+      margin: const EdgeInsets.only(top: 30),
       child: Row(children: [
         Container(
           margin: const EdgeInsets.only(right: 10),
           child: Material(
-            color: Colors.transparent,
+            color: (_wallet.cashInFormField?.isNotEmpty ?? false)
+                ? Colors.transparent
+                : Colors.black12,
             borderRadius: BorderRadius.circular(10),
             child: InkWell(
               onTap: (_wallet.cashInFormField?.isNotEmpty ?? false)
@@ -319,11 +323,17 @@ class _WalletsState extends State<Wallets> {
                   border: Border.all(color: Colors.black45),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
-                    "CASH IN",
-                    style:
-                        TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
+                    "CASH IN ${(_wallet.cashInFormField?.isNotEmpty ?? false) ? "" : "\n(Disabled)"}",
+                    style: TextStyle(
+                        fontSize: (_wallet.cashInFormField?.isNotEmpty ?? false)
+                            ? 30.0
+                            : 23.0,
+                        fontWeight: FontWeight.w500,
+                        color: (_wallet.cashInFormField?.isNotEmpty ?? false)
+                            ? Colors.black
+                            : Colors.black45.withOpacity(0.5)),
                   ),
                 ),
               ),
@@ -351,10 +361,12 @@ class _WalletsState extends State<Wallets> {
                   child: Text(
                 "CASH OUT ${(_wallet.cashOutFormField?.isNotEmpty ?? false) ? "" : "\n(Disabled)"}",
                 style: TextStyle(
-                    fontSize: 16.0,
+                    fontSize: (_wallet.cashOutFormField?.isNotEmpty ?? false)
+                        ? 30.0
+                        : 23.0,
                     fontWeight: FontWeight.w500,
                     color: (_wallet.cashOutFormField?.isNotEmpty ?? false)
-                        ? Colors.transparent
+                        ? Colors.black
                         : Colors.black45.withOpacity(0.5)),
               )),
             ),

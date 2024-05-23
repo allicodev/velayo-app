@@ -113,6 +113,5 @@ class _InitializeState extends State<InitializeScreen> {
         ),
       ),
     );
-    ;
   }
 }

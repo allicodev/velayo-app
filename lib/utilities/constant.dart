@@ -5,7 +5,7 @@ import 'package:velayo_flutterapp/repository/models/etc.dart';
 const ACCENT_PRIMARY = Color(0xFF98c04b);
 const ACCENT_SECONDARY = Color(0xFF294b0f);
 
-const String IS_PODUCTION = "dev";
+const String IS_PODUCTION = "prod"; // dev prod
 
 getBaseUrl() {
   if (IS_PODUCTION == "prod") return "https://velayo-eservice.vercel.app";
@@ -26,3 +26,5 @@ String BASE_URL = getBaseUrl();
 enum TransactionTypes { MISCELLANEOUS, BILLS, EMONEY, LOAD, SHOPEE }
 
 const PESO = "₱";
+
+const LOAD_PORTALS = ["TM", "GLOBE", "SMART", "TNT", "DITO", "GOMO"];
