@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:velayo_flutterapp/widgets/observer.dart';
-import 'package:velayo_flutterapp/initialize.dart';
+import 'package:velayo_flutterapp/widgets/initialize.dart';
 
 void main() {
   BlocOverrides.runZoned(

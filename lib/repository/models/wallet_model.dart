@@ -5,6 +5,7 @@ part 'wallet_model.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class Wallet {
+  String? id;
   final String name;
   final String cashinType;
   final double cashinFeeValue;
@@ -30,6 +31,7 @@ class Wallet {
       this.isDisabled = false,
       this.createdAt});
 
-  factory Wallet.fromJson(Map<String, dynamic> json) => _$WalletFromJson(json);
+  factory Wallet.fromJson(Map<String, dynamic> json) =>
+      _$WalletFromJson(json)..id = json["id"] ?? json["_id"];
   Map<String, dynamic> toJson() => _$WalletToJson(this);
 }

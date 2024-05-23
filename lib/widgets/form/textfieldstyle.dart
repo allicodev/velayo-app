@@ -14,7 +14,8 @@ InputDecoration textFieldStyle(
     FloatingLabelBehavior? floatingLabelBehavior,
     EdgeInsets? contentPadding,
     Color? focusBorderColor,
-    bool enabled = true}) {
+    bool enabled = true,
+    TextStyle? labelStyle}) {
   return InputDecoration(
       enabled: enabled,
       border: OutlineInputBorder(
@@ -23,9 +24,18 @@ InputDecoration textFieldStyle(
       ),
       contentPadding: contentPadding,
       counterText: counterText,
-      prefix: prefix != null ? Text(prefix) : null,
+      prefix: prefix != null
+          ? Container(
+              margin: const EdgeInsets.only(right: 5),
+              child: Text(
+                prefix,
+                style: labelStyle?.copyWith(color: Colors.black38),
+              ),
+            )
+          : null,
       prefixIcon: prefixIcon,
       floatingLabelBehavior: floatingLabelBehavior,
+      floatingLabelStyle: const TextStyle(fontSize: 20, color: Colors.black38),
       // fillColor: backgroundColor ?? Colors.grey[50],
       // fillColor: Colors.transparent,
       fillColor: enabled ? Colors.grey[50] : Colors.grey[300],
@@ -38,6 +48,7 @@ InputDecoration textFieldStyle(
       suffixIcon: suffixIcon,
       hintText: hint,
       labelText: label,
+      labelStyle: labelStyle?.copyWith(color: Colors.black38),
       focusColor: ACCENT_PRIMARY,
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(

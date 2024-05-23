@@ -20,6 +20,8 @@ class Button extends StatelessWidget {
   final FontWeight? fontWeight;
   final bool? displayMode;
   final bool? isTextExpanded;
+  final double? width;
+  final double? height;
 
   const Button(
       {Key? key,
@@ -40,7 +42,9 @@ class Button extends StatelessWidget {
       this.fontWeight,
       this.textColor,
       this.displayMode,
-      this.isTextExpanded})
+      this.isTextExpanded,
+      this.width,
+      this.height})
       : super(key: key);
 
   @override
@@ -62,10 +66,12 @@ class Button extends StatelessWidget {
               : 1,
       child: Container(
         margin: margin,
+        width: width,
+        height: height,
         decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.all(Radius.circular(borderRadius ?? 5)),
-            border: Border.all(color: borderColor ?? ACCENT_PRIMARY)),
+            border: Border.all(color: borderColor ?? Colors.black54)),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
