@@ -1,5 +1,6 @@
 import 'package:velayo_flutterapp/repository/errors.dart';
 import 'package:velayo_flutterapp/repository/models/bills_model.dart';
+import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/repository/models/wallet_model.dart';
 import 'package:velayo_flutterapp/repository/service/api_service.dart';
 import 'package:velayo_flutterapp/utilities/api_status.dart';
@@ -34,6 +35,21 @@ class Service {
     }
     if (response is Failure) {
       throw ErrorGettingWallets();
+    }
+  }
+
+  getBranch() async {
+    final response = await APIServices.get(endpoint: "/api/branch");
+    if (response is Success) {
+      if (response.response["data"].isNotEmpty) {
+        return List<Branch>.from(
+            response.response["data"].map((x) => Branch.fromJson(x)));
+      } else {
+        throw ErrorEmptyResponse();
+      }
+    }
+    if (response is Failure) {
+      throw ErrorGettingBranches();
     }
   }
 }

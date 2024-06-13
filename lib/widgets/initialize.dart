@@ -48,6 +48,10 @@ class _InitializeState extends State<InitializeScreen> {
     if ([ConnectivityResult.mobile, ConnectivityResult.wifi]
         .contains(connectivityResult)) {
       setState(() => initialState = 'online');
+
+      if (mounted) {
+        Navigator.pushNamed(context, "/home");
+      }
     } else {
       setState(() => initialState = "offline");
     }
@@ -92,26 +96,6 @@ class _InitializeState extends State<InitializeScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.deepOrangeAccent,
-      body: RepositoryProvider(
-        create: (context) => Repository(service: Service()),
-        child: MultiBlocProvider(
-          providers: [
-            BlocProvider<BillsBloc>(
-              create: (context) => BillsBloc(
-                billRepository: context.read<Repository>(),
-              )..add(GetBills()),
-            ),
-            BlocProvider<WalletBloc>(
-              create: (context) => WalletBloc(
-                walletRepository: context.read<Repository>(),
-              )..add(GetWallets()),
-            ),
-          ],
-          child: const HomeScreen(),
-        ),
-      ),
-    );
+    return Container();
   }
 }

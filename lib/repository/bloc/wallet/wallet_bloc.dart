@@ -8,18 +8,18 @@ part 'wallet_state.dart';
 
 class WalletBloc extends Bloc<WalletEvents, WalletState> {
   WalletBloc({
-    required this.walletRepository,
+    required this.repo,
   }) : super(WalletState()) {
-    on<GetWallets>(_mapGetWalletEventToState);
+    on<GetWallets>(_getWallet);
   }
 
-  final Repository walletRepository;
+  final Repository repo;
 
-  void _mapGetWalletEventToState(
-      GetWallets event, Emitter<WalletState> emit) async {
+  void _getWallet(GetWallets event, Emitter<WalletState> emit) async {
     try {
       emit(state.copyWith(status: WalletStatus.loading));
-      final wallets = await walletRepository.getWallets();
+      final wallets = await repo.getWallets();
+
       emit(
         state.copyWith(
           status: WalletStatus.success,

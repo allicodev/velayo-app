@@ -8,4 +8,5 @@ class Repository {
 
   Future<dynamic> getBills() async => service.getBills();
   Future<dynamic> getWallets() async => service.getWallets();
+  Future<dynamic> getBranches() async => service.getBranch();
 }

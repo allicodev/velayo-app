@@ -4,7 +4,9 @@ import 'package:velayo_flutterapp/screens/load_screen.dart';
 import 'package:velayo_flutterapp/screens/shopee_collect_screen.dart';
 import 'package:velayo_flutterapp/screens/wallet.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
+import 'package:velayo_flutterapp/utilities/shared_prefs.dart';
 import 'package:velayo_flutterapp/widgets/home_button.dart';
+import 'package:velayo_flutterapp/widgets/pin.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,14 +17,33 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String selectedTransaction = "";
+  bool isValidating = false;
 
-  @override
-  void initState() {
-    fetchBills();
-    super.initState();
+  Widget showNoOfferSelected() {
+    return const Expanded(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image(
+            image: AssetImage('assets/images/image-home1.png'),
+            height: 300,
+            fit: BoxFit.contain,
+          ),
+          SizedBox(height: 15.0),
+          Text(
+            "Welcome to Velayo Customer Queue App",
+            style: TextStyle(
+                fontSize: 48, fontFamily: 'abel', fontWeight: FontWeight.w700),
+          ),
+          SizedBox(height: 15.0),
+          Text(
+            "Please select an offer to the left side to continue",
+            style: TextStyle(fontSize: 24, fontFamily: 'abel'),
+          )
+        ],
+      ),
+    );
   }
-
-  fetchBills() async {}
 
   Widget showSelectedOffer() {
     return Container(
@@ -49,34 +70,120 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: [
-          Container(
-            margin: const EdgeInsets.all(18.0),
-            width: MediaQuery.of(context).size.width * 0.204,
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                childAspectRatio: 16 / 9,
-                crossAxisCount: 1,
-              ),
-              itemCount: home_offers.length,
-              itemBuilder: (context, index) => HomeButton(
-                value: home_offers[index],
-                isSelected: home_offers[index].title.toLowerCase() ==
-                    selectedTransaction,
-                onClick: () => setState(() => selectedTransaction =
-                    home_offers[index].title.toLowerCase()),
-              ),
+        body: Row(
+      children: [
+        Container(
+          margin: const EdgeInsets.all(18.0),
+          width: MediaQuery.of(context).size.width * 0.204,
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+              childAspectRatio: 16 / 9,
+              crossAxisCount: 1,
+            ),
+            itemCount: home_offers.length,
+            itemBuilder: (context, index) => HomeButton(
+              value: home_offers[index],
+              isSelected:
+                  home_offers[index].title.toLowerCase() == selectedTransaction,
+              onClick: () {
+                if (home_offers[index].title.toLowerCase() == "admin area") {
+                  showDialog(
+                      context: context,
+                      barrierDismissible: !isValidating,
+                      builder: (BuildContext context) =>
+                          StatefulBuilder(builder: (context, setState) {
+                            return Dialog(
+                                backgroundColor: Colors.transparent,
+                                elevation: 0,
+                                child: Container(
+                                    padding: const EdgeInsets.all(16.0),
+                                    width: 500,
+                                    height: 400,
+                                    decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius:
+                                            BorderRadius.circular(8.0)),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        const Text(
+                                          "Administrative Area",
+                                          style: TextStyle(
+                                              fontFamily: "abel",
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 32.0),
+                                        ),
+                                        const SizedBox(height: 16.0),
+                                        if (isValidating)
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                  margin: const EdgeInsets.only(
+                                                      right: 10.0),
+                                                  child: const Text(
+                                                      "Validating....")),
+                                              const SizedBox(width: 15.0),
+                                              const SizedBox(
+                                                width: 25,
+                                                height: 25,
+                                                child: Center(
+                                                  child:
+                                                      CircularProgressIndicator(),
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        else
+                                          const Text(
+                                            "Please enter a pin code to access this area",
+                                            style: TextStyle(
+                                                fontFamily: "abel",
+                                                fontSize: 22.0),
+                                          ),
+                                        const SizedBox(height: 16.0),
+                                        Pin(
+                                          length: 6,
+                                          disabled: isValidating,
+                                          onComplete: (pin) {
+                                            setState(() {
+                                              isValidating = true;
+                                            });
+
+                                            Future.delayed(
+                                                const Duration(seconds: 0), () {
+                                              setState(() {
+                                                isValidating = false;
+                                              });
+                                              Navigator.pop(context);
+                                              Navigator.pushNamed(
+                                                  context, "/admin");
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    )));
+                          }));
+                } else {
+                  setState(() => selectedTransaction =
+                      home_offers[index].title.toLowerCase());
+                }
+              },
             ),
           ),
-          if (selectedTransaction != "") showSelectedOffer()
-        ],
-      ),
-    );
+        ),
+        if (selectedTransaction != "")
+          showSelectedOffer()
+        else
+          showNoOfferSelected(),
+      ],
+    ));
   }
 }

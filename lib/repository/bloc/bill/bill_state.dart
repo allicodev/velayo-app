@@ -2,7 +2,7 @@ part of 'bill_bloc.dart';
 
 enum BillStatus { initial, success, error, loading }
 
-extension AllGamesStatusX on BillStatus {
+extension A on BillStatus {
   bool get isInitial => this == BillStatus.initial;
   bool get isSuccess => this == BillStatus.success;
   bool get isError => this == BillStatus.error;

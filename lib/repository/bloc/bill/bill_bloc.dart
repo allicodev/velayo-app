@@ -8,17 +8,17 @@ part 'bill_state.dart';
 
 class BillsBloc extends Bloc<BillEvents, BillState> {
   BillsBloc({
-    required this.billRepository,
+    required this.repo,
   }) : super(BillState()) {
-    on<GetBills>(_mapGetGamesEventToState);
+    on<GetBills>(_getBills);
   }
 
-  final Repository billRepository;
+  final Repository repo;
 
-  void _mapGetGamesEventToState(GetBills event, Emitter<BillState> emit) async {
+  void _getBills(GetBills event, Emitter<BillState> emit) async {
     try {
       emit(state.copyWith(status: BillStatus.loading));
-      final bills = await billRepository.getBills();
+      final bills = await repo.getBills();
       emit(
         state.copyWith(
           status: BillStatus.success,

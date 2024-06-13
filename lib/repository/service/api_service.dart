@@ -16,10 +16,9 @@ class APIServices {
       var response = await http.get(url, headers: <String, String>{
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${Env.Token}}',
-        // 'app-sprint-version':
-        //     await getVersionName(),
         'app-device-platform': 'android'
       });
+
       if ([200, 201].contains(response.statusCode)) {
         return Success(
             code: response.statusCode, response: jsonDecode(response.body));
