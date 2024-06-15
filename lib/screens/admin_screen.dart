@@ -22,9 +22,13 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      BlocProvider.of<BranchBloc>(context).add(GetBranches());
+      await getValue('selectedBranch').then((selectedBranch) =>
+          BlocProvider.of<AppBloc>(context).add(SetSelectedBranch(
+              branch: BlocProvider.of<BranchBloc>(context)
+                  .state
+                  .branches
+                  .firstWhere((e) => e.id == selectedBranch))));
     });
-
     super.initState();
   }
 
@@ -136,60 +140,49 @@ class _AdminScreenState extends State<AdminScreen> {
       body: Container(
         height: MediaQuery.of(context).size.height,
         padding: const EdgeInsets.all(24.0),
-        child: BlocListener<BranchBloc, BranchState>(
-          listener: (context, state) async {
-            if (state.status.isSuccess) {
-              await getValue('selectedBranch').then((selectedBranch) =>
-                  BlocProvider.of<AppBloc>(context).add(SetSelectedBranch(
-                      branch: branchBloc.state.branches
-                          .firstWhere((e) => e.id == selectedBranch))));
-            }
-          },
-          child: BlocBuilder<BranchBloc, BranchState>(
-            builder: (context, branchState) {
-              return branchState.status.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : Stack(
-                      children: [
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          child: Button(
-                            label: "BACK",
-                            fontSize: 25,
-                            icon: Icons.chevron_left_rounded,
-                            textColor: Colors.black87,
-                            width: 170,
-                            padding: const EdgeInsets.symmetric(vertical: 20),
-                            onPress: () {
-                              if (Navigator.canPop(context)) {
-                                Navigator.pop(context);
-                              }
+        child: BlocBuilder<BranchBloc, BranchState>(
+          builder: (context, branchState) {
+            return branchState.status.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : Stack(
+                    children: [
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        child: Button(
+                          label: "BACK",
+                          fontSize: 25,
+                          icon: Icons.chevron_left_rounded,
+                          textColor: Colors.black87,
+                          width: 170,
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          onPress: () {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                          },
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(32.0),
+                        child: SingleChildScrollView(
+                          child: MasonryGridView.count(
+                            crossAxisCount: 4,
+                            mainAxisSpacing: 15,
+                            crossAxisSpacing: 15,
+                            shrinkWrap: true,
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: admin_home.length,
+                            itemBuilder: (context, index) {
+                              return generateAdminButton(index);
                             },
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(32.0),
-                          child: SingleChildScrollView(
-                            child: MasonryGridView.count(
-                              crossAxisCount: 4,
-                              mainAxisSpacing: 15,
-                              crossAxisSpacing: 15,
-                              shrinkWrap: true,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 15),
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: admin_home.length,
-                              itemBuilder: (context, index) {
-                                return generateAdminButton(index);
-                              },
-                            ),
-                          ),
-                        )
-                      ],
-                    );
-            },
-          ),
+                      )
+                    ],
+                  );
+          },
         ),
       ),
     );

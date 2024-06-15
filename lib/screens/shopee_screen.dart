@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:velayo_flutterapp/screens/bills.dart';
+import 'package:velayo_flutterapp/screens/bills_screen.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
 import 'package:velayo_flutterapp/widgets/form/textfieldstyle.dart';

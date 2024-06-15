@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/branch/branch_bloc.dart';
-import 'package:velayo_flutterapp/screens/widgets/error_screen.dart';
+import 'package:velayo_flutterapp/screens/error_screen.dart';
 import 'package:velayo_flutterapp/utilities/shared_prefs.dart';
 
 class BranchChooser extends StatelessWidget {

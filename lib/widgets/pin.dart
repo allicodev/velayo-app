@@ -6,20 +6,19 @@ class Pin extends StatefulWidget {
   int length;
   void Function(String) onComplete;
   bool disabled;
+  bool autoFocus;
   FocusNode? focus;
   Pin(
       {Key? key,
       required this.length,
-      this.disabled = false,
       required this.onComplete,
+      this.disabled = false,
+      this.autoFocus = true,
       this.focus})
       : super(key: key);
 
   @override
   State<Pin> createState() => _FilledRoundedPinPutState();
-
-  @override
-  String toStringShort() => 'Rounded Filled';
 }
 
 class _FilledRoundedPinPutState extends State<Pin> {
@@ -27,6 +26,7 @@ class _FilledRoundedPinPutState extends State<Pin> {
   late FocusNode focusNode;
   int length = 4;
   bool isDisabled = false;
+  bool autoFocus = true;
 
   @override
   void initState() {
@@ -34,6 +34,7 @@ class _FilledRoundedPinPutState extends State<Pin> {
       length = widget.length;
       isDisabled = widget.disabled;
       focusNode = widget.focus ?? FocusNode();
+      autoFocus = widget.autoFocus;
     });
     super.initState();
   }
@@ -70,7 +71,7 @@ class _FilledRoundedPinPutState extends State<Pin> {
         controller: controller,
         focusNode: focusNode,
         defaultPinTheme: defaultPinTheme,
-        autofocus: true,
+        autofocus: autoFocus,
         obscureText: true,
         enableSuggestions: false,
         enabled: !isDisabled,

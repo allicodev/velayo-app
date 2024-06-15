@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';
 import 'package:velayo_flutterapp/repository/models/bills_model.dart' as _;
 import 'package:velayo_flutterapp/repository/models/bills_model.dart';
-import 'package:velayo_flutterapp/screens/widgets/error_screen.dart';
+import 'package:velayo_flutterapp/screens/error_screen.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
 import 'package:velayo_flutterapp/widgets/form/textfieldstyle.dart';

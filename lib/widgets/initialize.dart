@@ -8,7 +8,7 @@ import 'package:velayo_flutterapp/repository/repository.dart';
 import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/wallet/wallet_bloc.dart';
 import 'package:velayo_flutterapp/repository/service/service.dart';
-import 'package:velayo_flutterapp/screens/home.dart';
+import 'package:velayo_flutterapp/screens/home_screen.dart';
 import 'package:velayo_flutterapp/widgets/hero/failed_hero.dart';
 import 'package:velayo_flutterapp/widgets/icon_loaders.dart';
 import 'package:velayo_flutterapp/widgets/icon_text.dart';
@@ -25,11 +25,11 @@ class InitializeScreen extends StatefulWidget {
 class _InitializeState extends State<InitializeScreen> {
   var initialState = "loading";
   late StreamSubscription<ConnectivityResult> subscription;
+  var lastResult;
 
   @override
   void initState() {
     super.initState();
-    checkConnectivity();
 
     subscription =
         Connectivity().onConnectivityChanged.listen((_) => checkConnectivity());
@@ -43,17 +43,23 @@ class _InitializeState extends State<InitializeScreen> {
 
   Future<void> checkConnectivity() async {
     setState(() => initialState = "loading");
+
     await Future.delayed(const Duration(milliseconds: 500));
     var connectivityResult = await Connectivity().checkConnectivity();
-    if ([ConnectivityResult.mobile, ConnectivityResult.wifi]
-        .contains(connectivityResult)) {
-      setState(() => initialState = 'online');
 
-      if (mounted) {
-        Navigator.pushNamed(context, "/home");
+    if (lastResult != connectivityResult) {
+      setState(() => lastResult = connectivityResult);
+
+      if ([ConnectivityResult.mobile, ConnectivityResult.wifi]
+          .contains(connectivityResult)) {
+        setState(() => initialState = 'online');
+
+        if (mounted) {
+          Navigator.pushNamed(context, "/home");
+        }
+      } else {
+        setState(() => initialState = "offline");
       }
-    } else {
-      setState(() => initialState = "offline");
     }
   }
 
