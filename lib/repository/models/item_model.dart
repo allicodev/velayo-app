@@ -12,15 +12,30 @@ class Item {
   final double cost;
   final double price;
 
-  Item(
-      {required this.name,
-      required this.unit,
-      required this.itemCode,
-      this.description,
-      required this.cost,
-      required this.price});
+  Item({
+    required this.name,
+    required this.unit,
+    required this.itemCode,
+    required this.cost,
+    required this.price,
+    this.description,
+    this.id,
+  });
 
   factory Item.fromJson(Map<String, dynamic> json) =>
       _$ItemFromJson(json)..id = json["id"] ?? json["_id"];
   Map<String, dynamic> toJson() => _$ItemToJson(this);
+}
+
+class MiscItem extends Item {
+  MiscItem(
+      {required super.name,
+      required super.unit,
+      required super.itemCode,
+      required super.cost,
+      required super.price,
+      required this.quantity,
+      super.id});
+
+  int quantity;
 }

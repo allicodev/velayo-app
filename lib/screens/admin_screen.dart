@@ -63,11 +63,12 @@ class _AdminScreenState extends State<AdminScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     height: 100,
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black45),
+                      border: Border.all(color: ACCENT_SECONDARY),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             admin_home[i],
@@ -115,7 +116,7 @@ class _AdminScreenState extends State<AdminScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     height: 100,
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black45),
+                      border: Border.all(color: ACCENT_SECONDARY),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Center(

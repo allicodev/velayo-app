@@ -5,6 +5,7 @@ import 'package:velayo_flutterapp/provider/route_generator.dart';
 import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/branch/branch_bloc.dart';
+import 'package:velayo_flutterapp/repository/bloc/misc/misc_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/observer.dart';
 import 'package:velayo_flutterapp/repository/bloc/wallet/wallet_bloc.dart';
 import 'package:velayo_flutterapp/repository/repository.dart';
@@ -20,6 +21,7 @@ void main() async {
         create: (context) => Repository(service: Service()),
         child: MultiBlocProvider(providers: [
           BlocProvider<AppBloc>(create: (context) => AppBloc()),
+          BlocProvider<MiscBloc>(create: (context) => MiscBloc()),
           BlocProvider<BillsBloc>(
             create: (context) => BillsBloc(
               repo: context.read<Repository>(),

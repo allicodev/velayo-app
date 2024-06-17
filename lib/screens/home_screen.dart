@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(25.0),
               width: MediaQuery.of(context).size.width * 0.75,
               decoration: BoxDecoration(
-                  color: ACCENT_SECONDARY,
+                  color: ACCENT_PRIMARY,
                   borderRadius: BorderRadius.circular(10.0)),
               child: Text(
                 selectedTransaction.toUpperCase(),

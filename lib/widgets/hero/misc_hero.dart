@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
+import 'package:velayo_flutterapp/repository/bloc/misc/misc_bloc.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
@@ -17,15 +19,27 @@ class MiscHero extends StatefulWidget {
   State<MiscHero> createState() => _MiscHeroState();
 }
 
-class _MiscHeroState extends State<MiscHero> {
+class _MiscHeroState extends State<MiscHero>
+    with SingleTickerProviderStateMixin {
   late TextEditingController controller;
   late ItemsWithStock item;
+  late final AnimationController animationController;
+
   int inputQuantity = 1;
+  double _scaleTransformValue = 1;
 
   @override
   void initState() {
     controller = TextEditingController()..setText(inputQuantity.toString());
     item = widget.item;
+    animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 0.05,
+    )..addListener(() {
+        setState(() => _scaleTransformValue = 1 - animationController.value);
+      });
     super.initState();
   }
 
@@ -37,10 +51,96 @@ class _MiscHeroState extends State<MiscHero> {
 
   @override
   Widget build(BuildContext context) {
+    final miscBloc = context.watch<MiscBloc>();
+
+    getCurrentItem() {
+      try {
+        if (miscBloc.state.items == null ||
+            (miscBloc.state.items?.isEmpty ?? false)) return null;
+        return miscBloc.state.items!.firstWhere((e) => e.id == item.itemId.id);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    Widget showCartAdder() {
+      return SingleChildScrollView(
+          child: Container(
+        color: Colors.white,
+        width: MediaQuery.of(context).size.width * 0.2,
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(item.itemId.name,
+                style: const TextStyle(
+                    fontSize: 28.0,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'abel')),
+            const SizedBox(height: 25.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 180,
+                  child: TextFormField(
+                    onChanged: (val) =>
+                        setState(() => inputQuantity = int.parse(val)),
+                    textAlign: TextAlign.center,
+                    controller: controller,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: textFieldStyle(
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
+                  ),
+                ),
+                const SizedBox(width: 5),
+                MiscIconButton(
+                    icon: const Icon(Icons.add,
+                        size: 22.0, color: Colors.black54),
+                    onPress: () {
+                      controller.setText((inputQuantity + 1).toString());
+                      setState(() => inputQuantity = inputQuantity + 1);
+                    }),
+                const SizedBox(width: 1),
+                MiscIconButton(
+                    icon: const Icon(Icons.remove,
+                        size: 22.0, color: Colors.black54),
+                    onPress: () {
+                      if (inputQuantity > 1) {
+                        controller.setText((inputQuantity - 1).toString());
+                        setState(() => inputQuantity = inputQuantity - 1);
+                      }
+                    }),
+              ],
+            ),
+            const SizedBox(height: 10.0),
+            Button(
+                label: "ADD TO CART",
+                width: 280,
+                textColor: Colors.white,
+                borderColor: ACCENT_PRIMARY,
+                backgroundColor: ACCENT_PRIMARY,
+                onPress: () {
+                  widget.onSubmit(
+                      item.itemId.id ?? "", int.parse(controller.text));
+                })
+          ],
+        ),
+      ));
+    }
+
     return MouseRegion(
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: () {
+          animationController.forward();
+
+          Future.delayed(
+            const Duration(milliseconds: 100),
+            () => animationController.reverse(),
+          );
+
           showDialog(
               context: context,
               builder: (context) {
@@ -48,75 +148,7 @@ class _MiscHeroState extends State<MiscHero> {
                   return Dialog(
                     backgroundColor: Colors.transparent,
                     elevation: 0,
-                    child: SingleChildScrollView(
-                        child: Container(
-                      color: Colors.white,
-                      width: MediaQuery.of(context).size.width * 0.2,
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(item.itemId.name,
-                              style: const TextStyle(
-                                  fontSize: 28.0,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'abel')),
-                          const SizedBox(height: 25.0),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 180,
-                                child: TextFormField(
-                                  onChanged: (val) => setState(
-                                      () => inputQuantity = int.parse(val)),
-                                  textAlign: TextAlign.center,
-                                  controller: controller,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly
-                                  ],
-                                  decoration: textFieldStyle(
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.never,
-                                      backgroundColor:
-                                          ACCENT_PRIMARY.withOpacity(.03)),
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              MiscIconButton(
-                                  icon: const Icon(Icons.add,
-                                      size: 22.0, color: Colors.black54),
-                                  onPress: () {
-                                    controller.setText(
-                                        (inputQuantity + 1).toString());
-                                    setState(() =>
-                                        inputQuantity = inputQuantity + 1);
-                                  }),
-                              const SizedBox(width: 1),
-                              MiscIconButton(
-                                  icon: const Icon(Icons.remove,
-                                      size: 22.0, color: Colors.black54),
-                                  onPress: () {
-                                    if (inputQuantity > 1) {
-                                      controller.setText(
-                                          (inputQuantity - 1).toString());
-                                      setState(() =>
-                                          inputQuantity = inputQuantity - 1);
-                                    }
-                                  }),
-                            ],
-                          ),
-                          const SizedBox(height: 10.0),
-                          Button(
-                              label: "ADD TO CART",
-                              width: 280,
-                              textColor: Colors.white,
-                              borderColor: ACCENT_PRIMARY,
-                              backgroundColor: ACCENT_PRIMARY,
-                              onPress: () {})
-                        ],
-                      ),
-                    )),
+                    child: showCartAdder(),
                   );
                 });
               }).then((e) {
@@ -124,82 +156,94 @@ class _MiscHeroState extends State<MiscHero> {
             controller.setText("1");
           });
         },
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.grey.shade300),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.shade300,
-                blurRadius: 3.0,
-                offset: const Offset(2, 0),
-              ),
-              BoxShadow(
-                color: Colors.grey.shade300,
-                blurRadius: 3.0,
-                offset: const Offset(-2, 0),
-              ),
-            ],
-          ),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Column(
-                children: [
-                  SizedBox(
-                      height: 120,
-                      child: Center(
-                          child: Text(
-                        "Image is Here",
-                        style: TextStyle(color: Colors.grey.shade300),
-                      ))),
-                  Container(
-                      padding: const EdgeInsets.only(bottom: 30.0),
+        child: Transform.scale(
+          scale: _scaleTransformValue,
+          child: Container(
+            decoration: BoxDecoration(
+              color: getCurrentItem() == null ? Colors.white : ACCENT_SECONDARY,
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(10.0),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.shade300,
+                  blurRadius: 3.0,
+                  offset: const Offset(2, 0),
+                ),
+                BoxShadow(
+                  color: Colors.grey.shade300,
+                  blurRadius: 3.0,
+                  offset: const Offset(-2, 0),
+                ),
+              ],
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                if (getCurrentItem() == null)
+                  Positioned(
+                      top: 10,
+                      left: 10,
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 4.0, horizontal: 8.0),
+                            decoration: BoxDecoration(
+                                color: ACCENT_PRIMARY,
+                                borderRadius: BorderRadius.circular(100.0)),
+                            child: Text("$PESO${item.itemId.price}",
+                                style: const TextStyle(color: Colors.white)),
+                          ),
+                          const SizedBox(width: 8.0),
+                          Container(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 4.0, horizontal: 8.0),
+                              decoration: BoxDecoration(
+                                  color: ACCENT_PRIMARY,
+                                  borderRadius: BorderRadius.circular(100.0)),
+                              child: Text("${item.stock_count} stock(s)",
+                                  style: const TextStyle(color: Colors.white)))
+                        ],
+                      ))
+                else
+                  Positioned(
+                      top: 10,
+                      left: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 4.0, horizontal: 8.0),
+                        decoration: BoxDecoration(
+                            color: ACCENT_PRIMARY,
+                            borderRadius: BorderRadius.circular(100.0)),
+                        child: Text(
+                            "Added to Cart (${getCurrentItem()!.quantity}pcs)",
+                            style: const TextStyle(color: Colors.white)),
+                      )),
+                SizedBox(
+                    height: 200,
+                    child: Center(
+                        child: Text(
+                      "Image is Here",
+                      style: TextStyle(color: Colors.grey.shade300),
+                    ))),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                      padding: const EdgeInsets.only(bottom: 10.0),
                       child: Text(item.itemId.name,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontSize: 16.0,
+                          style: TextStyle(
+                              color: getCurrentItem() == null
+                                  ? Colors.black87
+                                  : Colors.white,
+                              fontSize: 22.0,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'abel'))),
-                ],
-              ),
-              Positioned(
-                  bottom: -30,
-                  child: Container(
-                      width: MediaQuery.of(context).size.width * 0.171,
-                      decoration: BoxDecoration(
-                        color: ACCENT_PRIMARY,
-                        borderRadius: BorderRadius.circular(100.0),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.grey,
-                            blurRadius: 3.0,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.fromLTRB(12.0, 4.0, 4.0, 4.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text("Available Stock: ${item.stock_count}",
-                                style: const TextStyle(color: Colors.white)),
-                            Container(
-                              decoration: BoxDecoration(
-                                  color: ACCENT_SECONDARY.withOpacity(0.5),
-                                  borderRadius: BorderRadius.circular(100.0)),
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text("$PESO${item.itemId.price}",
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18.0,
-                                      color: Colors.white)),
-                            )
-                          ],
-                        ),
-                      )))
-            ],
+                )
+              ],
+            ),
           ),
         ),
       ),

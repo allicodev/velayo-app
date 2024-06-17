@@ -233,89 +233,92 @@ class _WalletsState extends State<Wallets> {
       }
     }
 
-    return Container(
-      width: MediaQuery.of(context).size.width * 0.75,
-      height: MediaQuery.of(context).size.height * 0.78,
-      margin: const EdgeInsets.only(top: 15),
-      child: Stack(
-        children: [
-          Positioned(
-              bottom: 0,
-              left: 0,
-              child: Button(
-                label: "BACK",
-                fontSize: 25,
-                icon: Icons.chevron_left_rounded,
-                textColor: Colors.black87,
-                width: 170,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                onPress: () => setState(() {
-                  selectedWallet = "";
-                  selectedWalletType = "";
-                }),
-              )),
-          if (formFields != null &&
-              formFields.isNotEmpty &&
-              selectedWalletType != "")
+    return Expanded(
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.75,
+        height: MediaQuery.of(context).size.height * 0.78,
+        margin: const EdgeInsets.only(top: 15),
+        child: Stack(
+          children: [
             Positioned(
                 bottom: 0,
-                right: 0,
+                left: 0,
                 child: Button(
-                    label: "SUBMIT",
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 20, horizontal: 70),
-                    backgroundColor: ACCENT_SECONDARY,
-                    fontSize: 25,
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 15, vertical: 10),
-                    onPress: () {
-                      if (formKey.currentState!.validate()) {}
-                    })),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (formFields != null &&
-                  formFields.isNotEmpty &&
-                  selectedWalletType != "")
-                Center(
-                  child: SizedBox(
-                    width: 700,
-                    child: Column(
-                      children: [
-                        Text(
-                          "${_selectedWallet.name.toUpperCase()} ${selectedWalletType.toUpperCase()}",
-                          style: const TextStyle(
-                              fontSize: 36, fontWeight: FontWeight.w700),
-                        ),
-                        Form(
-                            key: formKey,
-                            child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 15, vertical: 10),
-                                child: Column(
-                                  children: List.generate(
-                                      formFields.length,
-                                      (index) => Container(
-                                          margin:
-                                              const EdgeInsets.only(top: 20),
-                                          child:
-                                              generateForm(formFields[index]))),
-                                ))),
-                      ],
+                  label: "BACK",
+                  fontSize: 25,
+                  icon: Icons.chevron_left_rounded,
+                  textColor: Colors.black87,
+                  width: 170,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  onPress: () => setState(() {
+                    selectedWallet = "";
+                    selectedWalletType = "";
+                  }),
+                )),
+            if (formFields != null &&
+                formFields.isNotEmpty &&
+                selectedWalletType != "")
+              Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Button(
+                      label: "SUBMIT",
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 20, horizontal: 70),
+                      backgroundColor: ACCENT_SECONDARY,
+                      fontSize: 25,
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 15, vertical: 10),
+                      onPress: () {
+                        if (formKey.currentState!.validate()) {}
+                      })),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (formFields != null &&
+                    formFields.isNotEmpty &&
+                    selectedWalletType != "")
+                  Center(
+                    child: SizedBox(
+                      width: 700,
+                      child: Column(
+                        children: [
+                          Text(
+                            "${_selectedWallet.name.toUpperCase()} ${selectedWalletType.toUpperCase()}",
+                            style: const TextStyle(
+                                fontSize: 36, fontWeight: FontWeight.w700),
+                          ),
+                          Form(
+                              key: formKey,
+                              child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 15, vertical: 10),
+                                  child: Column(
+                                    children: List.generate(
+                                        formFields.length,
+                                        (index) => Container(
+                                            margin:
+                                                const EdgeInsets.only(top: 20),
+                                            child: generateForm(
+                                                formFields[index]))),
+                                  ))),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              if ((_selectedWallet.cashInFormField?.isEmpty ?? false) &&
-                  (_selectedWallet.cashOutFormField?.isEmpty ?? false))
-                const Center(
-                  child: Text("There are no Field Forms added on this Wallet"),
-                )
-              else if (selectedWalletType == "")
-                showSelectedWalletType(_selectedWallet)
-            ],
-          )
-        ],
+                if ((_selectedWallet.cashInFormField?.isEmpty ?? false) &&
+                    (_selectedWallet.cashOutFormField?.isEmpty ?? false))
+                  const Center(
+                    child:
+                        Text("There are no Field Forms added on this Wallet"),
+                  )
+                else if (selectedWalletType == "")
+                  showSelectedWalletType(_selectedWallet)
+              ],
+            )
+          ],
+        ),
       ),
     );
   }
