@@ -31,7 +31,7 @@ class _CartDrawerState extends State<CartDrawer> {
                 },
         ),
         Button(
-          label: "CLEAR",
+          label: "CLEAR ALL",
           icon: Icons.close,
           textColor: Colors.red,
           backgroundColor: Colors.transparent,

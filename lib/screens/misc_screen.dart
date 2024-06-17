@@ -10,6 +10,7 @@ import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/repository/models/item_model.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
 import 'package:velayo_flutterapp/utilities/shared_prefs.dart';
+import 'package:velayo_flutterapp/widgets/button.dart';
 import 'package:velayo_flutterapp/widgets/form/textfieldstyle.dart';
 import 'package:velayo_flutterapp/widgets/hero/misc_hero.dart';
 import 'package:collection/collection.dart';
@@ -96,81 +97,104 @@ class _MiscScreenState extends State<MiscScreen> {
               ),
             ]),
             const Divider(),
-            SingleChildScrollView(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.75,
-                child: MasonryGridView.count(
-                  shrinkWrap: true,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  crossAxisCount: 4,
-                  mainAxisSpacing: 50,
-                  crossAxisSpacing: 25,
-                  itemCount: state.selectedBranch?.items
-                          .where((e) => e.itemId.name
-                              .toLowerCase()
-                              .contains(search.toLowerCase()))
-                          .length ??
-                      0,
-                  itemBuilder: (context, index) => MiscHero(
-                    item: state.selectedBranch!.items[index],
-                    onSubmit: (itemId, quantity) {
-                      ItemsWithStock? item = state.selectedBranch?.items
-                          .firstWhereOrNull((e) => e.itemId.id == itemId);
+            Stack(
+              children: [
+                SingleChildScrollView(
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.75,
+                    child: MasonryGridView.count(
+                      shrinkWrap: true,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 50,
+                      crossAxisSpacing: 25,
+                      itemCount: state.selectedBranch?.items
+                              .where((e) => e.itemId.name
+                                  .toLowerCase()
+                                  .contains(search.toLowerCase()))
+                              .length ??
+                          0,
+                      itemBuilder: (context, index) => MiscHero(
+                        item: state.selectedBranch!.items
+                            .where((e) => e.itemId.name
+                                .toLowerCase()
+                                .contains(search.toLowerCase()))
+                            .toList()[index],
+                        onSubmit: (itemId, quantity) {
+                          ItemsWithStock? item = state.selectedBranch?.items
+                              .firstWhereOrNull((e) => e.itemId.id == itemId);
 
-                      if (item != null) {
-                        MiscItem? miscItem = miscBloc.state.items
-                            ?.firstWhereOrNull((e) => e.id == itemId);
+                          if (item != null) {
+                            MiscItem? miscItem = miscBloc.state.items
+                                ?.firstWhereOrNull((e) => e.id == itemId);
 
-                        if (item.stock_count < quantity ||
-                            (miscItem != null &&
-                                quantity >
-                                    item.stock_count - miscItem.quantity)) {
-                          showTopSnackBar(
-                              Overlay.of(context),
-                              const CustomSnackBar.error(
-                                message:
-                                    "Quantity is greater than available stock(s)",
-                              ),
-                              snackBarPosition: SnackBarPosition.bottom,
-                              animationDuration:
-                                  const Duration(milliseconds: 700),
-                              displayDuration: const Duration(seconds: 1));
-                          return;
-                        }
+                            if (item.stock_count < quantity ||
+                                (miscItem != null &&
+                                    quantity >
+                                        item.stock_count - miscItem.quantity)) {
+                              showTopSnackBar(
+                                  Overlay.of(context),
+                                  const CustomSnackBar.error(
+                                    message:
+                                        "Quantity is greater than available stock(s)",
+                                  ),
+                                  snackBarPosition: SnackBarPosition.bottom,
+                                  animationDuration:
+                                      const Duration(milliseconds: 700),
+                                  displayDuration: const Duration(seconds: 1));
+                              return;
+                            }
 
-                        MiscItem? _item = miscBloc.state.items
-                            ?.firstWhereOrNull((e) => e.id == item.itemId.id);
+                            MiscItem? _item = miscBloc.state.items
+                                ?.firstWhereOrNull(
+                                    (e) => e.id == item.itemId.id);
 
-                        if (_item != null) {
-                          miscBloc.add(UpdateItemQuantity(
-                              id: item.itemId.id ?? "",
-                              quantity: _item.quantity + quantity));
+                            if (_item != null) {
+                              miscBloc.add(UpdateItemQuantity(
+                                  id: item.itemId.id ?? "",
+                                  quantity: _item.quantity + quantity));
 
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              }
+                              return;
+                            }
+
+                            miscBloc.add(AddItem(
+                                item: MiscItem(
+                                    id: item.itemId.id,
+                                    name: item.itemId.name,
+                                    unit: item.itemId.unit,
+                                    itemCode: item.itemId.itemCode,
+                                    cost: item.itemId.cost,
+                                    price: item.itemId.price,
+                                    quantity: quantity)));
+
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
                           }
-                          return;
-                        }
-
-                        miscBloc.add(AddItem(
-                            item: MiscItem(
-                                id: item.itemId.id,
-                                name: item.itemId.name,
-                                unit: item.itemId.unit,
-                                itemCode: item.itemId.itemCode,
-                                cost: item.itemId.cost,
-                                price: item.itemId.price,
-                                quantity: quantity)));
-
-                        if (Navigator.canPop(context)) {
-                          Navigator.pop(context);
-                        }
-                      }
-                    },
+                        },
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                if (miscBloc.state.items?.isNotEmpty ?? false)
+                  Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Button(
+                          label: "CHECKOUT",
+                          icon: Icons.login,
+                          textColor: Colors.white,
+                          backgroundColor: ACCENT_PRIMARY,
+                          borderColor: Colors.transparent,
+                          fontSize: 24.0,
+                          onPress: () {
+                            Navigator.pushNamed(context, "/misc-payment");
+                          })),
+              ],
             ),
           ],
         ),

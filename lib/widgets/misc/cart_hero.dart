@@ -16,80 +16,76 @@ class CartHero extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 40.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Container(
-            decoration:
-                BoxDecoration(border: Border.all(color: Colors.black12)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8.0),
-                  height: 200,
-                  child: Stack(children: [
-                    Positioned(
-                      left: 0,
-                      bottom: 0,
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.18,
-                        child: Tooltip(
-                          message: "",
-                          child: Text(
-                            item.name,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            style: const TextStyle(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'abel'),
-                          ),
-                        ),
+      child: Container(
+        decoration: BoxDecoration(border: Border.all(color: Colors.black12)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8.0),
+              height: 200,
+              child: Stack(children: [
+                Positioned(
+                  left: 0,
+                  bottom: 0,
+                  child: SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.18,
+                    child: Tooltip(
+                      message: "",
+                      child: Text(
+                        item.name,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'abel'),
                       ),
                     ),
-                    Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 4.0, horizontal: 8.0),
-                          decoration: BoxDecoration(
-                              color: Colors.grey.shade300,
-                              borderRadius: BorderRadius.circular(8.0)),
-                          child: Text(
-                              "$PESO${item.price} x ${item.quantity} = $PESO${calculateTotal()}",
-                              style: const TextStyle(fontSize: 16.0)),
-                        )),
-                    Positioned(
-                        child: Container(
+                  ),
+                ),
+                Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 4.0, horizontal: 8.0),
                       decoration: BoxDecoration(
-                          color: ACCENT_PRIMARY,
-                          borderRadius: BorderRadius.circular(100.0)),
-                      child: Text("Qty: ${item.quantity}",
-                          style: const TextStyle(color: Colors.white)),
-                    )),
-                    Center(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(8.0)),
                       child: Text(
-                        "Image is here",
-                        style: TextStyle(color: Colors.grey.shade300),
-                      ),
-                    )
-                  ]),
-                ),
-              ],
+                          "$PESO${item.price} x ${item.quantity} = $PESO${calculateTotal()}",
+                          style: const TextStyle(fontSize: 16.0)),
+                    )),
+                Positioned(
+                    child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 4.0, horizontal: 8.0),
+                  decoration: BoxDecoration(
+                      color: ACCENT_PRIMARY,
+                      borderRadius: BorderRadius.circular(100.0)),
+                  child: Text("Qty: ${item.quantity}",
+                      style: const TextStyle(color: Colors.white)),
+                )),
+                Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Button(
+                        label: "Remove",
+                        width: 100,
+                        borderColor: Colors.transparent,
+                        textColor: Colors.red.shade400,
+                        onPress: remove)),
+                Center(
+                  child: Text(
+                    "Image is here",
+                    style: TextStyle(color: Colors.grey.shade300),
+                  ),
+                )
+              ]),
             ),
-          ),
-          const SizedBox(height: 5),
-          Button(
-              label: "Remove",
-              width: 100,
-              borderColor: Colors.transparent,
-              textColor: Colors.red.shade400,
-              onPress: () => remove())
-        ],
+          ],
+        ),
       ),
     );
   }
