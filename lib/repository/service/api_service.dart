@@ -44,21 +44,16 @@ class APIServices {
     try {
       var url = Uri.parse("$BASE_URL$endpoint");
 
-      http.Response response;
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${Env.Token}',
+        },
+        body: jsonEncode(payload),
+      );
 
-      var request = http.MultipartRequest("POST", url);
-      request.headers['Authorization'] = 'Bearer ${Env.Token}';
-      payload.forEach((key, value) {
-        if (value != null) {
-          request.fields[key] = value is Iterable<dynamic> || value is Map
-              ? jsonEncode(value)
-              : value.toString();
-        }
-      });
-
-      response = await http.Response.fromStream(await request.send());
-
-      if (response.statusCode == 200) {
+      if (jsonDecode(response.body)["success"]) {
         return Success(code: 200, response: jsonDecode(response.body));
       } else {
         return Failure(

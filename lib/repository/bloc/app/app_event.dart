@@ -9,3 +9,5 @@ class SetSelectedBranch extends AppEvents {
   SetSelectedBranch({required this.branch});
   Branch branch;
 }
+
+class GetSettings extends AppEvents {}

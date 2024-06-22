@@ -28,15 +28,6 @@ class _MiscScreenState extends State<MiscScreen> {
   String search = "";
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await getValue('selectedBranch').then((selectedBranch) {
-        BlocProvider.of<AppBloc>(context).add(SetSelectedBranch(
-            branch: BlocProvider.of<BranchBloc>(context)
-                .state
-                .branches
-                .firstWhere((e) => e.id == selectedBranch)));
-      });
-    });
     scaffoldKey = widget.scaffoldKey;
     super.initState();
   }

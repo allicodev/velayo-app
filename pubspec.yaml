@@ -21,6 +21,7 @@ dependencies:
   shared_preferences: ^2.2.3
   json_annotation: ^4.9.0
   top_snackbar_flutter: ^3.1.0
+  lottie: ^3.1.2
 
 dev_dependencies:
   flutter_test:
@@ -34,6 +35,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/lottie/
 
   fonts:
     - family: Abel

@@ -6,6 +6,6 @@ class BranchEvents extends Equatable {
 }
 
 class GetBranches extends BranchEvents {
-  @override
-  List<Object?> get props => [];
+  Function? onDone;
+  GetBranches({this.onDone});
 }

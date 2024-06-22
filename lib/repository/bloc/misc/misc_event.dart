@@ -22,3 +22,16 @@ class UpdateItemQuantity extends MiscEvents {
 }
 
 class PurgeItem extends MiscEvents {}
+
+class UpdateItemBranch extends MiscEvents {
+  String id;
+  String type;
+  List<BranchItemUpdate> items;
+  String? transactId;
+  UpdateItemBranch({
+    required this.id,
+    required this.type,
+    required this.items,
+    this.transactId,
+  });
+}

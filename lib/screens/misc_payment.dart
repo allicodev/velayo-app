@@ -1,9 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
+import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';
+import 'package:velayo_flutterapp/repository/bloc/branch/branch_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/misc/misc_bloc.dart';
+import 'package:velayo_flutterapp/repository/models/branch_model.dart';
+import 'package:velayo_flutterapp/repository/models/etc.dart';
 import 'package:velayo_flutterapp/repository/models/item_model.dart';
+import 'package:velayo_flutterapp/repository/models/request_transaction_model.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
 import 'package:velayo_flutterapp/widgets/form/textfieldstyle.dart';
@@ -19,9 +25,70 @@ class _MiscPaymentState extends State<MiscPayment> {
   final formKey = GlobalKey<FormState>();
   bool isOnlinePayment = false;
 
+  Map<String, dynamic> onlinePaymentInput = {
+    "portal": "",
+    "receiverName": "",
+    "recieverNum": ""
+  };
+
+  handleRequest() {
+    var miscBloc = BlocProvider.of<MiscBloc>(context);
+    var billsBloc = BlocProvider.of<BillsBloc>(context);
+
+    Branch? currentBranch =
+        BlocProvider.of<AppBloc>(context).state.selectedBranch;
+
+    double total = miscBloc.state.items!
+        .map((e) => e.price * e.quantity)
+        .reduce((p, n) => p + n);
+
+    double fee = miscBloc.state.items == null
+        ? 0
+        : miscBloc.state.items!
+            .map((e) => (e.price - e.cost) * e.quantity)
+            .reduce((p, n) => p + n);
+
+    RequestTransaction tran = RequestTransaction(
+        type: "miscellaneous",
+        transactionDetails: jsonEncode(miscBloc.state.items
+            ?.map((e) => ({
+                  "name": e.name,
+                  "price": e.price,
+                  "quantity": e.quantity,
+                  "unit": e.unit,
+                  "cost": e.cost
+                }))
+            .toList()),
+        fee: fee,
+        amount: total - fee,
+        branchId: currentBranch?.id ?? "",
+        isOnlinePayment: isOnlinePayment);
+
+    if (isOnlinePayment) {
+      tran.portal = onlinePaymentInput["portal"];
+      tran.receiverName = onlinePaymentInput["receiverName"];
+      tran.recieverNum = onlinePaymentInput["recieverNum"];
+    }
+
+    billsBloc.add(ReqTransaction(
+        requestTransaction: tran,
+        onDone: (data) {
+          miscBloc.add(UpdateItemBranch(
+              id: data["branchId"],
+              type: "misc",
+              items: miscBloc.state.items!
+                  .map((e) => BranchItemUpdate(id: e.id!, count: -(e.quantity)))
+                  .toList(),
+              transactId: data["_id"]));
+          miscBloc.add(PurgeItem());
+        }));
+  }
+
   @override
   Widget build(BuildContext context) {
     final miscBloc = context.read<MiscBloc>();
+    final branchBloc = context.read<BranchBloc>();
+    final appBloc = context.read<AppBloc>();
 
     double calculateTotal() {
       if (miscBloc.state.items == null ||
@@ -96,6 +163,8 @@ class _MiscPaymentState extends State<MiscPayment> {
           child: Column(children: [
             TextFormField(
               style: const TextStyle(fontSize: 21),
+              onChanged: (val) =>
+                  setState(() => onlinePaymentInput["portal"] = val),
               validator: (val) {
                 if (val!.isEmpty) {
                   return "Portal is required";
@@ -111,6 +180,8 @@ class _MiscPaymentState extends State<MiscPayment> {
             ),
             const SizedBox(height: 10.0),
             TextFormField(
+              onChanged: (val) =>
+                  setState(() => onlinePaymentInput["receiverName"] = val),
               style: const TextStyle(fontSize: 21),
               validator: (val) {
                 if (val!.isEmpty) {
@@ -128,6 +199,8 @@ class _MiscPaymentState extends State<MiscPayment> {
             ),
             const SizedBox(height: 10.0),
             TextFormField(
+              onChanged: (val) =>
+                  setState(() => onlinePaymentInput["recieverNum"] = val),
               style: const TextStyle(fontSize: 21),
               validator: (val) {
                 if (val!.isEmpty) {
@@ -142,24 +215,6 @@ class _MiscPaymentState extends State<MiscPayment> {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
                   backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
             ),
-            const SizedBox(height: 10.0),
-            TextFormField(
-              style: const TextStyle(fontSize: 21),
-              // validator: (val) {
-              //   if (val!.isEmpty) {
-              //     return "Sender Number/Account Number is required";
-              //   }
-              //   return null;
-              // },
-              decoration: textFieldStyle(
-                  label:
-                      "Trace ID (date, time, last 4 digits) (e.g 2312121234)",
-                  labelStyle: const TextStyle(fontSize: 18),
-                  enabled: false,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                  backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
-            )
           ]));
     }
 
@@ -252,20 +307,11 @@ class _MiscPaymentState extends State<MiscPayment> {
                 borderColor: Colors.transparent,
                 onPress: () {
                   if (isOnlinePayment) {
-                    if (formKey.currentState!.validate()) {
-                    } else {
+                    if (!formKey.currentState!.validate()) {
                       return;
                     }
                   }
-
-                  showTopSnackBar(
-                      Overlay.of(context),
-                      const CustomSnackBar.success(
-                        message: "Checkout Success",
-                      ),
-                      snackBarPosition: SnackBarPosition.bottom,
-                      animationDuration: const Duration(milliseconds: 700),
-                      displayDuration: const Duration(seconds: 1));
+                  handleRequest();
                 })
           ],
         ),
@@ -284,17 +330,33 @@ class _MiscPaymentState extends State<MiscPayment> {
           },
         ),
       ),
-      body: Container(
-        color: Colors.grey.shade300,
-        padding: const EdgeInsets.all(15.0),
-        child: Row(
-          children: [
-            showA(),
-            const SizedBox(
-              width: 15.0,
-            ),
-            showB()
-          ],
+      body: BlocListener<BillsBloc, BillState>(
+        listener: (context, state) {
+          if (state.requestStatus.isSuccess) {
+            branchBloc.add(GetBranches(onDone: () {
+              appBloc.add(SetSelectedBranch(
+                  branch: BlocProvider.of<BranchBloc>(context)
+                      .state
+                      .branches
+                      .firstWhere((e) =>
+                          e.id == (appBloc.state.selectedBranch?.id ?? ""))));
+            }));
+
+            Navigator.pushNamed(context, "/request-success");
+          }
+        },
+        child: Container(
+          color: Colors.grey.shade300,
+          padding: const EdgeInsets.all(15.0),
+          child: Row(
+            children: [
+              showA(),
+              const SizedBox(
+                width: 15.0,
+              ),
+              showB()
+            ],
+          ),
         ),
       ),
     );

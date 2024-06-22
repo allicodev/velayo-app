@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/branch/branch_bloc.dart';
 import 'package:velayo_flutterapp/screens/bills_screen.dart';
 import 'package:velayo_flutterapp/screens/load_screen.dart';
@@ -31,10 +32,17 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await getValue('selectedBranch').then((b) {
         if (b != "" && branchBloc.state.branches.isEmpty) {
-          branchBloc.add(GetBranches());
+          branchBloc.add(GetBranches(onDone: () {
+            BlocProvider.of<AppBloc>(context).add(SetSelectedBranch(
+                branch: BlocProvider.of<BranchBloc>(context)
+                    .state
+                    .branches
+                    .firstWhere((e) => e.id == b)));
+          }));
         }
       });
     });
+
     super.initState();
   }
 

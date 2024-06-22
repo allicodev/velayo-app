@@ -20,8 +20,10 @@ void main() async {
     () => runApp(RepositoryProvider(
         create: (context) => Repository(service: Service()),
         child: MultiBlocProvider(providers: [
-          BlocProvider<AppBloc>(create: (context) => AppBloc()),
-          BlocProvider<MiscBloc>(create: (context) => MiscBloc()),
+          BlocProvider<MiscBloc>(
+              create: (context) => MiscBloc(repo: context.read<Repository>())),
+          BlocProvider<AppBloc>(
+              create: (context) => AppBloc(repo: context.read<Repository>())),
           BlocProvider<BillsBloc>(
             create: (context) => BillsBloc(
               repo: context.read<Repository>(),
