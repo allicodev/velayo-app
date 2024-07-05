@@ -11,7 +11,8 @@ class APIServices {
       required String endpoint,
       Map<String, dynamic>? query}) async {
     try {
-      var url = Uri.parse(externalUrl ?? "$BASE_URL$endpoint")
+      var url = Uri.parse(externalUrl ??
+              "https://2456-110-54-182-104.ngrok-free.app$endpoint")
           .replace(queryParameters: query);
       var response = await http.get(url, headers: <String, String>{
         'Content-Type': 'application/json',
@@ -42,7 +43,8 @@ class APIServices {
     required Map<String, dynamic> payload,
   }) async {
     try {
-      var url = Uri.parse("$BASE_URL$endpoint");
+      var url =
+          Uri.parse("https://2456-110-54-182-104.ngrok-free.app$endpoint");
 
       final response = await http.post(
         url,

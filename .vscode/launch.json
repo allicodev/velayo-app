@@ -10,6 +10,19 @@
       "type": "dart",
       "flutterMode": "debug",
       "args": ["-d", "macos"]
+    },
+    {
+      "name": "debug_android_alli",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "args": ["-d", "092253733E002055"]
+    },
+    {
+      "name": "Alli-emulator",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "emulator-5554"
     }
   ]
 }

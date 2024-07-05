@@ -1,5 +1,11 @@
+import 'dart:developer';
+
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/branch/branch_bloc.dart';
 import 'package:velayo_flutterapp/screens/bills_screen.dart';
@@ -8,6 +14,7 @@ import 'package:velayo_flutterapp/screens/misc_screen.dart';
 import 'package:velayo_flutterapp/screens/shopee_screen.dart';
 import 'package:velayo_flutterapp/screens/wallet_screen.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
+import 'package:velayo_flutterapp/utilities/printer.dart';
 import 'package:velayo_flutterapp/utilities/shared_prefs.dart';
 import 'package:velayo_flutterapp/widgets/home_button.dart';
 import 'package:velayo_flutterapp/widgets/misc/cart_drawer.dart';
@@ -22,8 +29,46 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final GlobalKey<ScaffoldState> globalKey = GlobalKey<ScaffoldState>();
+  BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
   String selectedTransaction = "";
   bool isValidating = false;
+
+  initBluetooth() async {
+    bool? isConnected = await bluetooth.isConnected;
+    List<BluetoothDevice> devices = [];
+    try {
+      log("Bluetooth start here");
+      devices = await bluetooth.getBondedDevices();
+      print(devices);
+      log("Bluetooth end here");
+      if (devices.isEmpty) {
+        showTopSnackBar(
+            Overlay.of(context),
+            const CustomSnackBar.error(
+              message: "No nearby bluetooth printer detected",
+            ),
+            snackBarPosition: SnackBarPosition.bottom,
+            animationDuration: const Duration(milliseconds: 700),
+            displayDuration: const Duration(seconds: 1));
+        return;
+      } else {
+        BluetoothDevice? printerDevice =
+            devices.where((e) => e.name == "BlueTooth Printer").firstOrNull;
+        if (printerDevice != null) {
+          bluetooth.isConnected.then((e) => bluetooth.connect(printerDevice));
+        } else {
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.error(
+                message: "Not connected to printer",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 0));
+        }
+      }
+    } on PlatformException {}
+  }
 
   @override
   void initState() {
@@ -42,6 +87,8 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       });
     });
+
+    initBluetooth();
 
     super.initState();
   }
@@ -123,6 +170,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   isSelected: home_offers[index].title.toLowerCase() ==
                       selectedTransaction,
                   onClick: () {
+                    if (home_offers[index].title.toLowerCase() ==
+                        "shopee collect") {
+                      Printer printer = Printer();
+                      printer.sample();
+
+                      return;
+                    }
+
                     if (home_offers[index].title.toLowerCase() ==
                         "admin area") {
                       showDialog(

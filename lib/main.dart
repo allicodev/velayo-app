@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,34 +12,36 @@ import 'package:velayo_flutterapp/repository/bloc/wallet/wallet_bloc.dart';
 import 'package:velayo_flutterapp/repository/repository.dart';
 import 'package:velayo_flutterapp/repository/service/service.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations(
-      [DeviceOrientation.landscapeLeft]);
-
+void main() {
   BlocOverrides.runZoned(
-    () => runApp(RepositoryProvider(
-        create: (context) => Repository(service: Service()),
-        child: MultiBlocProvider(providers: [
-          BlocProvider<MiscBloc>(
-              create: (context) => MiscBloc(repo: context.read<Repository>())),
-          BlocProvider<AppBloc>(
-              create: (context) => AppBloc(repo: context.read<Repository>())),
-          BlocProvider<BillsBloc>(
-            create: (context) => BillsBloc(
-              repo: context.read<Repository>(),
-            )..add(GetBills()),
-          ),
-          BlocProvider<WalletBloc>(
-            create: (context) => WalletBloc(
-              repo: context.read<Repository>(),
-            )..add(GetWallets()),
-          ),
-          BlocProvider<BranchBloc>(
-              create: (context) => BranchBloc(
-                    repo: context.read<Repository>(),
-                  )),
-        ], child: const MainApp()))),
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await SystemChrome.setPreferredOrientations(
+          [DeviceOrientation.landscapeLeft]);
+      return runApp(RepositoryProvider(
+          create: (context) => Repository(service: Service()),
+          child: MultiBlocProvider(providers: [
+            BlocProvider<MiscBloc>(
+                create: (context) =>
+                    MiscBloc(repo: context.read<Repository>())),
+            BlocProvider<AppBloc>(
+                create: (context) => AppBloc(repo: context.read<Repository>())),
+            BlocProvider<BillsBloc>(
+              create: (context) => BillsBloc(
+                repo: context.read<Repository>(),
+              )..add(GetBills()),
+            ),
+            BlocProvider<WalletBloc>(
+              create: (context) => WalletBloc(
+                repo: context.read<Repository>(),
+              )..add(GetWallets()),
+            ),
+            BlocProvider<BranchBloc>(
+                create: (context) => BranchBloc(
+                      repo: context.read<Repository>(),
+                    )),
+          ], child: const MainApp())));
+    },
     blocObserver: MyBlocObserver(),
   );
 }
