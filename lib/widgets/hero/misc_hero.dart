@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:velayo_flutterapp/repository/bloc/misc/misc_bloc.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
@@ -140,6 +142,17 @@ class _MiscHeroState extends State<MiscHero>
             const Duration(milliseconds: 100),
             () => animationController.reverse(),
           );
+          if (item.stock_count == 0) {
+            showTopSnackBar(
+                Overlay.of(context),
+                const CustomSnackBar.error(
+                  message: "Out os stock",
+                ),
+                snackBarPosition: SnackBarPosition.bottom,
+                animationDuration: const Duration(milliseconds: 700),
+                displayDuration: const Duration(seconds: 1));
+            return;
+          }
 
           showDialog(
               context: context,
@@ -201,7 +214,10 @@ class _MiscHeroState extends State<MiscHero>
                               decoration: BoxDecoration(
                                   color: ACCENT_PRIMARY,
                                   borderRadius: BorderRadius.circular(100.0)),
-                              child: Text("${item.stock_count} stock(s)",
+                              child: Text(
+                                  item.stock_count == 0
+                                      ? "Out os stock"
+                                      : "${item.stock_count} stock(s)",
                                   style: const TextStyle(color: Colors.white)))
                         ],
                       ))

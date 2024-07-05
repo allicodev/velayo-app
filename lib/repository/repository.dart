@@ -20,4 +20,6 @@ class Repository {
   Future<dynamic> updateItemBranch(String _id, String type,
           List<BranchItemUpdate> items, String? transactId) async =>
       service.updateBranchItem(_id, type, items, transactId);
+  Future<dynamic> updatePinBranch(String _, String __) async =>
+      service.updateBranchPin(_, __);
 }

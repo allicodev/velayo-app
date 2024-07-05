@@ -8,13 +8,14 @@ class Settings {
   double fee;
   double threshold;
   double additionalFee;
+  String pin;
 
-  Settings({
-    required this.disabled_eload,
-    required this.fee,
-    required this.threshold,
-    required this.additionalFee,
-  });
+  Settings(
+      {required this.disabled_eload,
+      required this.fee,
+      required this.threshold,
+      required this.additionalFee,
+      required this.pin});
 
   factory Settings.fromJson(Map<String, dynamic> json) =>
       _$SettingsFromJson(json);

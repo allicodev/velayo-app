@@ -4,6 +4,7 @@ import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
@@ -97,6 +98,8 @@ class _WalletsState extends State<Wallets> {
 
   @override
   Widget build(BuildContext context) {
+    final appBloc = context.read<AppBloc>();
+
     Widget showWalletList(List<Wallet> wallets) {
       var _wallets = [...wallets];
 
@@ -540,24 +543,35 @@ class _WalletsState extends State<Wallets> {
           Navigator.pushNamed(context, '/request-success');
         }
       },
-      child: BlocBuilder<WalletBloc, WalletState>(builder: (context, state) {
-        return state.status.isSuccess
-            ? selectedWallet != ""
-                ? showSelectedWallet(state.wallets)
-                : showWalletList(state.wallets)
-            : state.status.isLoading
-                ? Container(
-                    width: MediaQuery.of(context).size.width * 0.75,
-                    height: MediaQuery.of(context).size.height * 0.8,
-                    margin: const EdgeInsets.only(top: 15),
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                  )
-                : state.status.isError
-                    ? const ErrorScreen(title: "Fetching Wallets Error")
-                    : const SizedBox();
-      }),
+      child: appBloc.state.selectedBranch == null
+          ? SizedBox(
+              height: MediaQuery.of(context).size.height * 0.8,
+              width: MediaQuery.of(context).size.width * 0.75,
+              child: const Center(
+                child: Text(
+                  "No Branch Selected",
+                  style: TextStyle(color: Colors.black45, fontSize: 28.0),
+                ),
+              ),
+            )
+          : BlocBuilder<WalletBloc, WalletState>(builder: (context, state) {
+              return state.status.isSuccess
+                  ? selectedWallet != ""
+                      ? showSelectedWallet(state.wallets)
+                      : showWalletList(state.wallets)
+                  : state.status.isLoading
+                      ? Container(
+                          width: MediaQuery.of(context).size.width * 0.75,
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          margin: const EdgeInsets.only(top: 15),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      : state.status.isError
+                          ? const ErrorScreen(title: "Fetching Wallets Error")
+                          : const SizedBox();
+            }),
     );
   }
 }

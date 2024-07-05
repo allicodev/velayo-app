@@ -25,7 +25,8 @@ void main() {
                 create: (context) =>
                     MiscBloc(repo: context.read<Repository>())),
             BlocProvider<AppBloc>(
-                create: (context) => AppBloc(repo: context.read<Repository>())),
+                create: (context) => AppBloc(repo: context.read<Repository>())
+                  ..add(GetSettings())),
             BlocProvider<BillsBloc>(
               create: (context) => BillsBloc(
                 repo: context.read<Repository>(),

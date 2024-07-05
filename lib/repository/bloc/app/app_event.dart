@@ -5,9 +5,20 @@ class AppEvents extends Equatable {
   List<Object?> get props => [];
 }
 
+class UpdateStatus extends AppEvents {
+  SettingStatus status;
+  UpdateStatus({required this.status});
+}
+
 class SetSelectedBranch extends AppEvents {
   SetSelectedBranch({required this.branch});
   Branch branch;
 }
 
 class GetSettings extends AppEvents {}
+
+class UpdatePin extends AppEvents {
+  String id;
+  String pin;
+  UpdatePin({required this.id, required this.pin});
+}
