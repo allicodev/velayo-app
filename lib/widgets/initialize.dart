@@ -44,8 +44,11 @@ class _InitializeState extends State<InitializeScreen> {
     if (lastResult != connectivityResult) {
       setState(() => lastResult = connectivityResult);
 
-      if ([ConnectivityResult.mobile, ConnectivityResult.wifi]
-          .contains(connectivityResult)) {
+      if ([
+        ConnectivityResult.mobile,
+        ConnectivityResult.wifi,
+        ConnectivityResult.none
+      ].contains(connectivityResult)) {
         setState(() => initialState = 'online');
 
         if (mounted) {

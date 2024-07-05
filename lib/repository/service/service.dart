@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:velayo_flutterapp/repository/errors.dart';
 import 'package:velayo_flutterapp/repository/models/bills_model.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
@@ -84,16 +82,21 @@ class Service {
   }
 
   getSettings() async {
-    final response = await APIServices.get(endpoint: "/api/etc/eload-settings");
-    if (response is Success) {
-      if (response.response["data"] != null) {
-        return Settings.fromJson(response.response["data"]);
-      } else {
-        throw ErrorEmptyResponse();
+    try {
+      final response =
+          await APIServices.get(endpoint: "/api/etc/eload-settings");
+      if (response is Success) {
+        if (response.response["data"] != null) {
+          return Settings.fromJson(response.response["data"]);
+        } else {
+          throw ErrorEmptyResponse();
+        }
       }
-    }
-    if (response is Failure) {
-      throw ErrorGettingSettings();
+      if (response is Failure) {
+        throw ErrorGettingSettings();
+      }
+    } catch (e) {
+      print(e);
     }
   }
 
@@ -111,5 +114,16 @@ class Service {
     if (response is Failure) {
       throw ErrorGettingSettings();
     }
+  }
+
+  updateBranchPin(String _id, String pin) async {
+    final response = await APIServices.post(
+        endpoint: "/api/branch/update-pin", payload: {"_id": _id, "pin": pin});
+
+    if (response is Failure) {
+      throw ErrorUpdate();
+    }
+
+    return response;
   }
 }

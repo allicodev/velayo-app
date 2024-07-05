@@ -5,6 +5,7 @@ import 'package:pinput/pinput.dart';
 class Pin extends StatefulWidget {
   int length;
   void Function(String) onComplete;
+  void Function(String)? onChange;
   bool disabled;
   bool autoFocus;
   FocusNode? focus;
@@ -14,7 +15,8 @@ class Pin extends StatefulWidget {
       required this.onComplete,
       this.disabled = false,
       this.autoFocus = true,
-      this.focus})
+      this.focus,
+      this.onChange})
       : super(key: key);
 
   @override
@@ -75,6 +77,7 @@ class _FilledRoundedPinPutState extends State<Pin> {
         obscureText: true,
         enableSuggestions: false,
         enabled: !isDisabled,
+        onChanged: widget.onChange,
         inputFormatters: [
           FilteringTextInputFormatter.digitsOnly,
         ],

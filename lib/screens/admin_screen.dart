@@ -22,12 +22,15 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await getValue('selectedBranch').then((selectedBranch) =>
+      await getValue('selectedBranch').then((selectedBranch) {
+        if (selectedBranch != "") {
           BlocProvider.of<AppBloc>(context).add(SetSelectedBranch(
               branch: BlocProvider.of<BranchBloc>(context)
                   .state
                   .branches
-                  .firstWhere((e) => e.id == selectedBranch))));
+                  .firstWhere((e) => e.id == selectedBranch)));
+        }
+      });
     });
     super.initState();
   }
@@ -96,21 +99,26 @@ class _AdminScreenState extends State<AdminScreen> {
         case 1:
           {
             return Material(
-              color: selectedButton == admin_home[i]
-                  ? ACCENT_SECONDARY
-                  : Colors.transparent,
+              color: selectedButton != admin_home[i] ||
+                      appBloc.state.selectedBranch == null
+                  ? Colors.transparent
+                  : ACCENT_SECONDARY,
               borderRadius: BorderRadius.circular(10),
               child: InkWell(
-                onTap: () {
-                  setState(() => selectedButton = admin_home[i]);
+                onTap: appBloc.state.selectedBranch == null
+                    ? null
+                    : () {
+                        setState(() => selectedButton = admin_home[i]);
 
-                  showDialog(
-                      context: context,
-                      builder: (context) {
-                        return const PinUpdate();
-                      });
-                },
-                hoverColor: ACCENT_SECONDARY.withOpacity(0.7),
+                        showDialog(
+                            context: context,
+                            builder: (context) {
+                              return const PinUpdate();
+                            });
+                      },
+                hoverColor: appBloc.state.selectedBranch == null
+                    ? Colors.transparent
+                    : ACCENT_SECONDARY.withOpacity(0.7),
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),

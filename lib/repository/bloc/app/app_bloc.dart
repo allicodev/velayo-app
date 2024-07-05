@@ -11,11 +11,19 @@ class AppBloc extends Bloc<AppEvents, AppState> {
   AppBloc({
     required this.repo,
   }) : super(AppState()) {
+    on<UpdateStatus>(_updateStatus);
     on<SetSelectedBranch>(_setSelectedBranch);
     on<GetSettings>(_getSettings);
+    on<UpdatePin>(_updatePin);
   }
 
   final Repository repo;
+
+  void _updateStatus(UpdateStatus event, Emitter<AppState> emit) {
+    emit(
+      state.copyWith(statusSetting: event.status),
+    );
+  }
 
   void _setSelectedBranch(SetSelectedBranch event, Emitter<AppState> emit) {
     emit(
@@ -31,6 +39,20 @@ class AppBloc extends Bloc<AppEvents, AppState> {
         state.copyWith(
           statusSetting: SettingStatus.success,
           settings: settings,
+        ),
+      );
+    } catch (error) {
+      emit(state.copyWith(statusSetting: SettingStatus.error));
+    }
+  }
+
+  void _updatePin(UpdatePin event, Emitter<AppState> emit) async {
+    try {
+      emit(state.copyWith(statusSetting: SettingStatus.loading));
+      await repo.updatePinBranch(event.id, event.pin);
+      emit(
+        state.copyWith(
+          statusSetting: SettingStatus.success,
         ),
       );
     } catch (error) {

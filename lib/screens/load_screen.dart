@@ -107,181 +107,207 @@ class _LoadScreenState extends State<LoadScreen> {
         }
       },
       child: BlocBuilder<AppBloc, AppState>(builder: (context, state) {
-        return Expanded(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.75,
-            margin: const EdgeInsets.only(top: 15),
-            child: Center(
-              child: state.statusSetting.isLoading
-                  ? const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 10.0),
-                        Text("E-Load is fetching...",
-                            style:
-                                TextStyle(fontFamily: 'abel', fontSize: 18.0))
-                      ],
-                    )
-                  : SizedBox(
-                      width: 700,
-                      child: Column(
-                        children: [
-                          Form(
-                            key: formKey,
+        return state.selectedBranch == null
+            ? SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8,
+                width: MediaQuery.of(context).size.width * 0.75,
+                child: const Center(
+                  child: Text(
+                    "No Branch Selected",
+                    style: TextStyle(color: Colors.black45, fontSize: 28.0),
+                  ),
+                ),
+              )
+            : Expanded(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.75,
+                  margin: const EdgeInsets.only(top: 15),
+                  child: Center(
+                    child: state.statusSetting.isLoading
+                        ? const Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 10.0),
+                              Text("E-Load is fetching...",
+                                  style: TextStyle(
+                                      fontFamily: 'abel', fontSize: 18.0))
+                            ],
+                          )
+                        : SizedBox(
+                            width: 700,
                             child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Container(
-                                  margin: const EdgeInsets.only(top: 20),
-                                  child: DropDownTextField(
-                                      clearOption: true,
-                                      clearIconProperty:
-                                          IconProperty(color: ACCENT_SECONDARY),
-                                      validator: (val) {
-                                        if (val!.isEmpty) {
-                                          return "Provider is required";
-                                        }
-                                        return null;
-                                      },
-                                      listTextStyle:
-                                          const TextStyle(fontSize: 21),
-                                      textFieldDecoration: textFieldStyle(
-                                          label: "Provider",
-                                          labelStyle:
-                                              const TextStyle(fontSize: 25),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 10, vertical: 20),
-                                          backgroundColor:
-                                              ACCENT_PRIMARY.withOpacity(.03)),
-                                      dropdownRadius: 5,
-                                      dropDownList: LOAD_PORTALS.map((e) {
-                                        return DropDownValueModel(
-                                          value: e.toLowerCase(),
-                                          name:
-                                              "$e ${isDisabled(state.settings, e) ? "(DISABLED)" : ""}",
-                                        );
-                                      }).toList(),
-                                      onChanged: (val) => setState(() =>
-                                          selectedProvider =
-                                              (val as DropDownValueModel)
-                                                  .value)),
-                                ),
-                                Container(
-                                    margin: const EdgeInsets.only(top: 20),
-                                    child: TextFormField(
-                                      onChanged: (val) =>
-                                          setState(() => phoneNum = val),
-                                      maxLength: 10,
-                                      style: const TextStyle(fontSize: 21),
-                                      validator: (val) {
-                                        if (val!.isEmpty) {
-                                          return "Phone Number is required";
-                                        }
+                                Form(
+                                  key: formKey,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 20),
+                                        child: DropDownTextField(
+                                            clearOption: true,
+                                            clearIconProperty: IconProperty(
+                                                color: ACCENT_SECONDARY),
+                                            validator: (val) {
+                                              if (val!.isEmpty) {
+                                                return "Provider is required";
+                                              }
+                                              return null;
+                                            },
+                                            listTextStyle:
+                                                const TextStyle(fontSize: 21),
+                                            textFieldDecoration: textFieldStyle(
+                                                label: "Provider",
+                                                labelStyle: const TextStyle(
+                                                    fontSize: 25),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 20),
+                                                backgroundColor: ACCENT_PRIMARY
+                                                    .withOpacity(.03)),
+                                            dropdownRadius: 5,
+                                            dropDownList: LOAD_PORTALS.map((e) {
+                                              return DropDownValueModel(
+                                                value: e.toLowerCase(),
+                                                name:
+                                                    "$e ${isDisabled(state.settings, e) ? "(DISABLED)" : ""}",
+                                              );
+                                            }).toList(),
+                                            onChanged: (val) => setState(() =>
+                                                selectedProvider =
+                                                    (val as DropDownValueModel)
+                                                        .value)),
+                                      ),
+                                      Container(
+                                          margin:
+                                              const EdgeInsets.only(top: 20),
+                                          child: TextFormField(
+                                            onChanged: (val) =>
+                                                setState(() => phoneNum = val),
+                                            maxLength: 10,
+                                            style:
+                                                const TextStyle(fontSize: 21),
+                                            validator: (val) {
+                                              if (val!.isEmpty) {
+                                                return "Phone Number is required";
+                                              }
 
-                                        if (!val.startsWith("9")) {
-                                          return "Phone number should start with 9";
-                                        }
-                                        return null;
-                                      },
-                                      decoration: textFieldStyle(
-                                          label: "Phone Number",
-                                          prefix: "+63",
-                                          labelStyle:
-                                              const TextStyle(fontSize: 21),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 10, vertical: 20),
-                                          backgroundColor:
-                                              ACCENT_PRIMARY.withOpacity(.03)),
-                                    )),
-                                Container(
-                                    margin: const EdgeInsets.only(top: 20),
-                                    child: TextFormField(
-                                      onChanged: (val) => setState(() =>
-                                          amount = double.parse(
-                                              val.split(",").join())),
-                                      inputFormatters: [DecimalFormatter()],
-                                      style: const TextStyle(fontSize: 21),
-                                      validator: (val) {
-                                        if (val!.isEmpty) {
-                                          return "Amount is required";
-                                        }
-                                        return null;
-                                      },
-                                      decoration: textFieldStyle(
-                                          label: "Amount",
-                                          prefix: PESO,
-                                          labelStyle:
-                                              const TextStyle(fontSize: 21),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 10, vertical: 20),
-                                          backgroundColor:
-                                              ACCENT_PRIMARY.withOpacity(.03)),
-                                    )),
-                                Container(
-                                  margin: const EdgeInsets.only(top: 20),
-                                  child: RadioGroup(
-                                    currentValue: type,
-                                    choices: const ["Regular", "Promo"],
-                                    onChange: (e) => setState(() => type = e),
+                                              if (!val.startsWith("9")) {
+                                                return "Phone number should start with 9";
+                                              }
+                                              return null;
+                                            },
+                                            decoration: textFieldStyle(
+                                                label: "Phone Number",
+                                                prefix: "+63",
+                                                labelStyle: const TextStyle(
+                                                    fontSize: 21),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 20),
+                                                backgroundColor: ACCENT_PRIMARY
+                                                    .withOpacity(.03)),
+                                          )),
+                                      Container(
+                                          margin:
+                                              const EdgeInsets.only(top: 20),
+                                          child: TextFormField(
+                                            onChanged: (val) => setState(() =>
+                                                amount = double.parse(
+                                                    val.split(",").join())),
+                                            inputFormatters: [
+                                              DecimalFormatter()
+                                            ],
+                                            style:
+                                                const TextStyle(fontSize: 21),
+                                            validator: (val) {
+                                              if (val!.isEmpty) {
+                                                return "Amount is required";
+                                              }
+                                              return null;
+                                            },
+                                            decoration: textFieldStyle(
+                                                label: "Amount",
+                                                prefix: PESO,
+                                                labelStyle: const TextStyle(
+                                                    fontSize: 21),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 20),
+                                                backgroundColor: ACCENT_PRIMARY
+                                                    .withOpacity(.03)),
+                                          )),
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 20),
+                                        child: RadioGroup(
+                                          currentValue: type,
+                                          choices: const ["Regular", "Promo"],
+                                          onChange: (e) =>
+                                              setState(() => type = e),
+                                        ),
+                                      ),
+                                      if (type == "promo")
+                                        Container(
+                                          margin:
+                                              const EdgeInsets.only(top: 20),
+                                          child: TextFormField(
+                                            onChanged: (val) =>
+                                                setState(() => promo = val),
+                                            style:
+                                                const TextStyle(fontSize: 21),
+                                            validator: (val) {
+                                              if (val!.isEmpty) {
+                                                return "Promo is required";
+                                              }
+                                              return null;
+                                            },
+                                            decoration: textFieldStyle(
+                                                label: "Promo",
+                                                labelStyle: const TextStyle(
+                                                    fontSize: 25),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 20),
+                                                backgroundColor: ACCENT_PRIMARY
+                                                    .withOpacity(.03)),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
-                                if (type == "promo")
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 20),
-                                    child: TextFormField(
-                                      onChanged: (val) =>
-                                          setState(() => promo = val),
-                                      style: const TextStyle(fontSize: 21),
-                                      validator: (val) {
-                                        if (val!.isEmpty) {
-                                          return "Promo is required";
-                                        }
-                                        return null;
-                                      },
-                                      decoration: textFieldStyle(
-                                          label: "Promo",
-                                          labelStyle:
-                                              const TextStyle(fontSize: 25),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 10, vertical: 20),
-                                          backgroundColor:
-                                              ACCENT_PRIMARY.withOpacity(.03)),
-                                    ),
-                                  ),
+                                Button(
+                                    isLoading: state.statusSetting.isLoading,
+                                    label: isDisabled(
+                                            state.settings, selectedProvider)
+                                        ? "Provider is Temporarily Unavailable"
+                                        : "SUBMIT",
+                                    padding: const EdgeInsets.all(20),
+                                    backgroundColor: ACCENT_SECONDARY,
+                                    borderColor: Colors.transparent,
+                                    fontSize: 25,
+                                    margin: const EdgeInsets.only(top: 10.0),
+                                    onPress: isDisabled(
+                                            state.settings, selectedProvider)
+                                        ? null
+                                        : () {
+                                            if (formKey.currentState!
+                                                .validate()) {
+                                              handleRequest();
+                                            }
+                                          })
                               ],
                             ),
                           ),
-                          Button(
-                              isLoading: state.statusSetting.isLoading,
-                              label:
-                                  isDisabled(state.settings, selectedProvider)
-                                      ? "Provider is Temporarily Unavailable"
-                                      : "SUBMIT",
-                              padding: const EdgeInsets.all(20),
-                              backgroundColor: ACCENT_SECONDARY,
-                              borderColor: Colors.transparent,
-                              fontSize: 25,
-                              margin: const EdgeInsets.only(top: 10.0),
-                              onPress: isDisabled(
-                                      state.settings, selectedProvider)
-                                  ? null
-                                  : () {
-                                      if (formKey.currentState!.validate()) {
-                                        handleRequest();
-                                      }
-                                    })
-                        ],
-                      ),
-                    ),
-            ),
-          ),
-        );
+                  ),
+                ),
+              );
       }),
     );
   }

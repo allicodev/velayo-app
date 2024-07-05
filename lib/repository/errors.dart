@@ -9,3 +9,5 @@ class ErrorEmptyResponse implements Exception {}
 class ErrorRequestTransaction implements Exception {}
 
 class ErrorGettingSettings implements Exception {}
+
+class ErrorUpdate implements Exception {}

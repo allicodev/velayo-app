@@ -20,6 +20,7 @@ class BranchBloc extends Bloc<BranchEvents, BranchState> {
     try {
       emit(state.copyWith(status: BranchStatus.loading));
       final branches = await repo.getBranches();
+
       emit(
         state.copyWith(
           status: BranchStatus.success,

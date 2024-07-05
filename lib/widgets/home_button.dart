@@ -51,7 +51,7 @@ class _HomeButton extends State<HomeButton>
               () => animationController.reverse(),
             );
 
-            widget.isSelected ? null : widget.onClick();
+            widget.onClick();
           },
           hoverColor: ACCENT_SECONDARY.withOpacity(0.7),
           borderRadius: BorderRadius.circular(10),

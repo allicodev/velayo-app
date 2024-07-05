@@ -12,6 +12,7 @@ class Branch {
   final String spm;
   final List<ItemsWithStock> items;
   final DateTime? createdAt;
+  final String? pin;
 
   Branch(
       {required this.name,
@@ -19,6 +20,7 @@ class Branch {
       required this.device,
       required this.spm,
       required this.items,
+      this.pin,
       this.createdAt});
 
   factory Branch.fromJson(Map<String, dynamic> json) =>
