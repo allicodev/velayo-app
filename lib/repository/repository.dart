@@ -13,6 +13,9 @@ class Repository {
   Future<dynamic> getWallets() async => service.getWallets();
   Future<dynamic> getBranches() async => service.getBranch();
   Future<dynamic> getSettings() async => service.getSettings();
+  Future<dynamic> getItemCategories() async => service.getItemCategories();
+  Future<dynamic> lastQueue(String branchId) async =>
+      service.getLastQueue(branchId);
 
   // post
   Future<dynamic> requestTransaction(RequestTransaction _) async =>
@@ -22,4 +25,7 @@ class Repository {
       service.updateBranchItem(_id, type, items, transactId);
   Future<dynamic> updatePinBranch(String _, String __) async =>
       service.updateBranchPin(_, __);
+  Future<dynamic> newQueue(
+          String branchId, Map<String, dynamic> request) async =>
+      service.newQueue(branchId, request);
 }

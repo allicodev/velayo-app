@@ -2,6 +2,7 @@ import 'package:velayo_flutterapp/repository/errors.dart';
 import 'package:velayo_flutterapp/repository/models/bills_model.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/repository/models/etc.dart';
+import 'package:velayo_flutterapp/repository/models/item_model.dart';
 import 'package:velayo_flutterapp/repository/models/request_transaction_model.dart';
 import 'package:velayo_flutterapp/repository/models/settings_model.dart';
 import 'package:velayo_flutterapp/repository/models/wallet_model.dart';
@@ -60,7 +61,7 @@ class Service {
     Map<String, dynamic> payload = transaction.toMap();
     payload["history"] = [
       {
-        "description": "First  Transaction requested",
+        "description": "Request from Queue APP",
         "status": "request",
         "createdAt": DateTime.now().toIso8601String(),
       },
@@ -125,5 +126,54 @@ class Service {
     }
 
     return response;
+  }
+
+  getItemCategories() async {
+    try {
+      final response = await APIServices.get(endpoint: "/api/item/get-items");
+      if (response is Success) {
+        if (response.response["data"] != null) {
+          return List<ItemCategory>.from(
+              response.response["data"].map((x) => ItemCategory.fromJson(x)));
+        } else {
+          throw ErrorEmptyResponse();
+        }
+      }
+      if (response is Failure) {
+        throw ErrorGettingItemsCategory();
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  newQueue(String branchId, Map<String, dynamic> request) async {
+    try {
+      final response = await APIServices.post(
+          endpoint: "/api/etc/new-queue",
+          payload: {"branchId": branchId, "request": request});
+      if (response is Failure) {
+        throw ErrorNewQueue();
+      }
+
+      return response;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  getLastQueue(String branchId) async {
+    try {
+      final response = await APIServices.get(
+          endpoint: "/api/etc/check-last-queue", query: {"branchId": branchId});
+
+      if (response is Failure) {
+        throw ErrorNewQueue();
+      }
+
+      return response;
+    } catch (e) {
+      print(e);
+    }
   }
 }

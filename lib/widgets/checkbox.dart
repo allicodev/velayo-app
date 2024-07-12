@@ -46,7 +46,8 @@ class _CheckBoxState extends State<CheckBox>
             widget.onChanged(checked);
           },
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Transform.scale(
                   scale: 1.5,
@@ -60,7 +61,7 @@ class _CheckBoxState extends State<CheckBox>
                 padding: const EdgeInsets.only(left: 5),
                 child: Text(
                   widget.title,
-                  style: const TextStyle(fontSize: 24.0),
+                  style: const TextStyle(fontSize: 21.0),
                 ),
               ),
             ],

@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,16 +9,19 @@ import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/branch/branch_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/misc/misc_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/observer.dart';
+import 'package:velayo_flutterapp/repository/bloc/util/util_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/wallet/wallet_bloc.dart';
 import 'package:velayo_flutterapp/repository/repository.dart';
 import 'package:velayo_flutterapp/repository/service/service.dart';
 
 void main() {
+  HttpOverrides.global = MyHttpOverrides();
+
   BlocOverrides.runZoned(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
       await SystemChrome.setPreferredOrientations(
-          [DeviceOrientation.landscapeLeft]);
+          [DeviceOrientation.landscapeRight]);
       return runApp(RepositoryProvider(
           create: (context) => Repository(service: Service()),
           child: MultiBlocProvider(providers: [
@@ -26,7 +30,8 @@ void main() {
                     MiscBloc(repo: context.read<Repository>())),
             BlocProvider<AppBloc>(
                 create: (context) => AppBloc(repo: context.read<Repository>())
-                  ..add(GetSettings())),
+                  ..add(GetSettings())
+                  ..add(GetItemCategory())),
             BlocProvider<BillsBloc>(
               create: (context) => BillsBloc(
                 repo: context.read<Repository>(),
@@ -39,6 +44,10 @@ void main() {
             ),
             BlocProvider<BranchBloc>(
                 create: (context) => BranchBloc(
+                      repo: context.read<Repository>(),
+                    )),
+            BlocProvider<UtilBloc>(
+                create: (context) => UtilBloc(
                       repo: context.read<Repository>(),
                     )),
           ], child: const MainApp())));
@@ -58,5 +67,14 @@ class MainApp extends StatelessWidget {
       routes: routeGenerator,
       debugShowCheckedModeBanner: false,
     );
+  }
+}
+
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }

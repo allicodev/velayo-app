@@ -82,8 +82,7 @@ class Button extends StatelessWidget {
             onTap: (onPress == null || isLoading!) ? null : () => onPress!(),
             child: Padding(
               padding: padding ??
-                  const EdgeInsets.only(
-                      top: 12, bottom: 12, left: 18, right: 18),
+                  const EdgeInsets.symmetric(vertical: 12, horizontal: 18.0),
               child: Center(
                 child: Row(
                   mainAxisAlignment:

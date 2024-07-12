@@ -63,7 +63,7 @@ class _RequestSuccessScreenState extends State<RequestSuccessScreen>
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         SizedBox(
-            height: 400,
+            height: 350,
             child: Lottie.asset("assets/lottie/success_transact.json",
                 repeat: false)),
         AnimatedBuilder(
@@ -77,7 +77,11 @@ class _RequestSuccessScreenState extends State<RequestSuccessScreen>
           child: Column(
             children: [
               const Text(
-                "Success. You can take your queue ticket to the teller",
+                "Success. Please get your queue ticket",
+                style: TextStyle(fontSize: 32.0, fontFamily: 'abel'),
+              ),
+              const Text(
+                "and wait to the teller to call your queue number",
                 style: TextStyle(fontSize: 32.0, fontFamily: 'abel'),
               ),
               const Text(

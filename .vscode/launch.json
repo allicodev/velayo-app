@@ -23,6 +23,13 @@
       "request": "launch",
       "type": "dart",
       "deviceId": "emulator-5554"
+    },
+    {
+      "name": "debug_android_s8",
+      "request": "launch",
+      "type": "dart",
+      // "flutterMode": "release",
+      "args": ["-d", "0123456789ABCDEF"]
     }
   ]
 }

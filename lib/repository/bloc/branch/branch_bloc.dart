@@ -2,7 +2,6 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/repository/repository.dart';
-import 'package:velayo_flutterapp/utilities/shared_prefs.dart';
 
 part 'branch_event.dart';
 part 'branch_state.dart';
