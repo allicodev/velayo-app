@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
+import 'package:velayo_flutterapp/repository/models/item_model.dart';
 import 'package:velayo_flutterapp/repository/models/settings_model.dart';
 import 'package:velayo_flutterapp/repository/repository.dart';
 
@@ -15,6 +16,7 @@ class AppBloc extends Bloc<AppEvents, AppState> {
     on<SetSelectedBranch>(_setSelectedBranch);
     on<GetSettings>(_getSettings);
     on<UpdatePin>(_updatePin);
+    on<GetItemCategory>(_getItemCategories);
   }
 
   final Repository repo;
@@ -53,6 +55,21 @@ class AppBloc extends Bloc<AppEvents, AppState> {
       emit(
         state.copyWith(
           statusSetting: SettingStatus.success,
+        ),
+      );
+    } catch (error) {
+      emit(state.copyWith(statusSetting: SettingStatus.error));
+    }
+  }
+
+  void _getItemCategories(GetItemCategory event, Emitter<AppState> emit) async {
+    try {
+      emit(state.copyWith(statusSetting: SettingStatus.loading));
+      final itemsCategories = await repo.getItemCategories();
+      emit(
+        state.copyWith(
+          statusSetting: SettingStatus.success,
+          itemCategories: itemsCategories,
         ),
       );
     } catch (error) {

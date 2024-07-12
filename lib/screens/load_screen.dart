@@ -7,6 +7,7 @@ import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';
+import 'package:velayo_flutterapp/repository/bloc/util/util_bloc.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/repository/models/request_transaction_model.dart';
 import 'package:velayo_flutterapp/repository/models/settings_model.dart';
@@ -60,6 +61,7 @@ class _LoadScreenState extends State<LoadScreen> {
   handleRequest() async {
     Branch? currentBranch =
         BlocProvider.of<AppBloc>(context).state.selectedBranch;
+    int lastQueue = BlocProvider.of<UtilBloc>(context).state.lastQueue;
 
     RequestTransaction tran = RequestTransaction(
         type: "eload",
@@ -75,10 +77,24 @@ class _LoadScreenState extends State<LoadScreen> {
         fee: getFee(),
         amount: amount,
         branchId: currentBranch?.id ?? "",
-        isOnlinePayment: false);
+        isOnlinePayment: false,
+        queue: lastQueue + 1);
 
-    BlocProvider.of<BillsBloc>(context)
-        .add(ReqTransaction(requestTransaction: tran));
+    BlocProvider.of<BillsBloc>(context).add(ReqTransaction(
+        requestTransaction: tran,
+        onDone: (data) {
+          Map<String, dynamic> request = {
+            "transactionId": data["_id"],
+            "branchId": data["branchId"],
+            "billingType": "eload",
+            "queue": data["queue"]
+          };
+
+          BlocProvider.of<UtilBloc>(context).add(NewQueue(
+              request: request,
+              branchId: data["branchId"],
+              callback: (resp) {}));
+        }));
   }
 
   @override
@@ -89,6 +105,8 @@ class _LoadScreenState extends State<LoadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final billBloc = context.watch<BillsBloc>();
+
     return BlocListener<BillsBloc, BillState>(
       listener: (context, state) {
         if (state.requestStatus.isError) {
@@ -162,11 +180,11 @@ class _LoadScreenState extends State<LoadScreen> {
                                             textFieldDecoration: textFieldStyle(
                                                 label: "Provider",
                                                 labelStyle: const TextStyle(
-                                                    fontSize: 25),
+                                                    fontSize: 21),
                                                 contentPadding:
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 10,
-                                                        vertical: 20),
+                                                        vertical: 5),
                                                 backgroundColor: ACCENT_PRIMARY
                                                     .withOpacity(.03)),
                                             dropdownRadius: 5,
@@ -184,7 +202,7 @@ class _LoadScreenState extends State<LoadScreen> {
                                       ),
                                       Container(
                                           margin:
-                                              const EdgeInsets.only(top: 20),
+                                              const EdgeInsets.only(top: 10),
                                           child: TextFormField(
                                             onChanged: (val) =>
                                                 setState(() => phoneNum = val),
@@ -209,13 +227,13 @@ class _LoadScreenState extends State<LoadScreen> {
                                                 contentPadding:
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 10,
-                                                        vertical: 20),
+                                                        vertical: 5),
                                                 backgroundColor: ACCENT_PRIMARY
                                                     .withOpacity(.03)),
                                           )),
                                       Container(
                                           margin:
-                                              const EdgeInsets.only(top: 20),
+                                              const EdgeInsets.only(top: 10),
                                           child: TextFormField(
                                             onChanged: (val) => setState(() =>
                                                 amount = double.parse(
@@ -239,12 +257,12 @@ class _LoadScreenState extends State<LoadScreen> {
                                                 contentPadding:
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 10,
-                                                        vertical: 20),
+                                                        vertical: 5),
                                                 backgroundColor: ACCENT_PRIMARY
                                                     .withOpacity(.03)),
                                           )),
                                       Container(
-                                        margin: const EdgeInsets.only(top: 20),
+                                        margin: const EdgeInsets.only(top: 10),
                                         child: RadioGroup(
                                           currentValue: type,
                                           choices: const ["Regular", "Promo"],
@@ -283,7 +301,6 @@ class _LoadScreenState extends State<LoadScreen> {
                                   ),
                                 ),
                                 Button(
-                                    isLoading: state.statusSetting.isLoading,
                                     label: isDisabled(
                                             state.settings, selectedProvider)
                                         ? "Provider is Temporarily Unavailable"
@@ -291,7 +308,9 @@ class _LoadScreenState extends State<LoadScreen> {
                                     padding: const EdgeInsets.all(20),
                                     backgroundColor: ACCENT_SECONDARY,
                                     borderColor: Colors.transparent,
-                                    fontSize: 25,
+                                    isLoading:
+                                        billBloc.state.requestStatus.isLoading,
+                                    fontSize: 21,
                                     margin: const EdgeInsets.only(top: 10.0),
                                     onPress: isDisabled(
                                             state.settings, selectedProvider)

@@ -63,16 +63,19 @@ class _HomeButton extends State<HomeButton>
                 child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (widget.value.icon != null)
-                  Icon(
-                    widget.value.icon,
-                    size: 50.0,
-                    color: Colors.white,
-                  ),
+                // if (widget.value.icon != null)
+                //   Icon(
+                //     widget.value.icon,
+                //     size: 34.0,
+                //     color: Colors.white,
+                //   ),
                 Text(
                   widget.value.title,
                   style: const TextStyle(
-                      fontSize: 36.0, fontFamily: 'Abel', color: Colors.white),
+                      fontSize: 23.0,
+                      fontFamily: 'Abel',
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700),
                 ),
               ],
             )),

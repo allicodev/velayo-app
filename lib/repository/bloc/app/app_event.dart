@@ -17,6 +17,8 @@ class SetSelectedBranch extends AppEvents {
 
 class GetSettings extends AppEvents {}
 
+class GetItemCategory extends AppEvents {}
+
 class UpdatePin extends AppEvents {
   String id;
   String pin;

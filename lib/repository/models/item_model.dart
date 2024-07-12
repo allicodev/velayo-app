@@ -1,3 +1,6 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:convert';
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'item_model.g.dart';
@@ -38,4 +41,14 @@ class MiscItem extends Item {
       super.id});
 
   int quantity;
+}
+
+class ItemCategory {
+  String name;
+  ItemCategory({
+    required this.name,
+  });
+
+  factory ItemCategory.fromJson(Map<String, dynamic> json) =>
+      ItemCategory(name: json["name"] as String);
 }

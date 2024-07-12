@@ -6,6 +6,7 @@ import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/branch/branch_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/misc/misc_bloc.dart';
+import 'package:velayo_flutterapp/repository/bloc/util/util_bloc.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/repository/models/etc.dart';
 import 'package:velayo_flutterapp/repository/models/item_model.dart';
@@ -34,6 +35,7 @@ class _MiscPaymentState extends State<MiscPayment> {
   handleRequest() {
     var miscBloc = BlocProvider.of<MiscBloc>(context);
     var billsBloc = BlocProvider.of<BillsBloc>(context);
+    int lastQueue = BlocProvider.of<UtilBloc>(context).state.lastQueue;
 
     Branch? currentBranch =
         BlocProvider.of<AppBloc>(context).state.selectedBranch;
@@ -62,7 +64,8 @@ class _MiscPaymentState extends State<MiscPayment> {
         fee: fee,
         amount: total - fee,
         branchId: currentBranch?.id ?? "",
-        isOnlinePayment: isOnlinePayment);
+        isOnlinePayment: isOnlinePayment,
+        queue: lastQueue + 1);
 
     if (isOnlinePayment) {
       tran.portal = onlinePaymentInput["portal"];

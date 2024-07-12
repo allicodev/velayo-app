@@ -10,6 +10,7 @@ import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';
+import 'package:velayo_flutterapp/repository/bloc/util/util_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/wallet/wallet_bloc.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/repository/models/request_transaction_model.dart';
@@ -77,6 +78,7 @@ class _WalletsState extends State<Wallets> {
         .state
         .wallets
         .firstWhere((e) => e.id == selectedWallet);
+    int lastQueue = BlocProvider.of<UtilBloc>(context).state.lastQueue;
 
     Branch? currentBranch =
         BlocProvider.of<AppBloc>(context).state.selectedBranch;
@@ -90,14 +92,29 @@ class _WalletsState extends State<Wallets> {
         amount: amount,
         branchId: currentBranch?.id ?? "",
         walletId: sWallet.id ?? "",
-        isOnlinePayment: false);
+        isOnlinePayment: false,
+        queue: lastQueue + 1);
 
-    BlocProvider.of<BillsBloc>(context)
-        .add(ReqTransaction(requestTransaction: tran));
+    BlocProvider.of<BillsBloc>(context).add(ReqTransaction(
+        requestTransaction: tran,
+        onDone: (data) {
+          Map<String, dynamic> request = {
+            "transactionId": data["_id"],
+            "branchId": data["branchId"],
+            "billingType": "wallet",
+            "queue": data["queue"]
+          };
+
+          BlocProvider.of<UtilBloc>(context).add(NewQueue(
+              request: request,
+              branchId: data["branchId"],
+              callback: (resp) {}));
+        }));
   }
 
   @override
   Widget build(BuildContext context) {
+    final billBloc = context.read<BillsBloc>();
     final appBloc = context.read<AppBloc>();
 
     Widget showWalletList(List<Wallet> wallets) {
@@ -138,7 +155,7 @@ class _WalletsState extends State<Wallets> {
             const Divider(),
             SingleChildScrollView(
               child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.75,
+                height: MediaQuery.of(context).size.height * 0.6,
                 child: GridView.builder(
                   shrinkWrap: true,
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -146,7 +163,7 @@ class _WalletsState extends State<Wallets> {
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisSpacing: 20,
                     mainAxisSpacing: 20,
-                    childAspectRatio: 16 / 9,
+                    childAspectRatio: 1 / 1,
                     crossAxisCount: 4,
                   ),
                   itemCount: _wallets.length,
@@ -161,7 +178,7 @@ class _WalletsState extends State<Wallets> {
                           hoverColor: ACCENT_SECONDARY.withOpacity(0.7),
                           borderRadius: BorderRadius.circular(10),
                           child: Container(
-                            height: 140,
+                            height: 100,
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.black45),
                               borderRadius: BorderRadius.circular(10),
@@ -209,8 +226,8 @@ class _WalletsState extends State<Wallets> {
                 hoverColor: ACCENT_SECONDARY.withOpacity(0.7),
                 borderRadius: BorderRadius.circular(10),
                 child: Container(
-                  height: 140,
-                  width: 200,
+                  height: 70,
+                  width: 150,
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.black45),
                     borderRadius: BorderRadius.circular(10),
@@ -221,8 +238,8 @@ class _WalletsState extends State<Wallets> {
                       style: TextStyle(
                           fontSize:
                               (_wallet.cashInFormField?.isNotEmpty ?? false)
-                                  ? 30.0
-                                  : 23.0,
+                                  ? 25.0
+                                  : 18.0,
                           fontWeight: FontWeight.w500,
                           color: (_wallet.cashInFormField?.isNotEmpty ?? false)
                               ? Colors.black
@@ -245,8 +262,8 @@ class _WalletsState extends State<Wallets> {
               hoverColor: ACCENT_SECONDARY.withOpacity(0.7),
               borderRadius: BorderRadius.circular(10),
               child: Container(
-                height: 140,
-                width: 200,
+                height: 70,
+                width: 150,
                 decoration: BoxDecoration(
                     border: Border.all(color: Colors.black45),
                     borderRadius: BorderRadius.circular(10)),
@@ -255,8 +272,8 @@ class _WalletsState extends State<Wallets> {
                   "CASH OUT ${(_wallet.cashOutFormField?.isNotEmpty ?? false) ? "" : "\n(Disabled)"}",
                   style: TextStyle(
                       fontSize: (_wallet.cashOutFormField?.isNotEmpty ?? false)
-                          ? 30.0
-                          : 23.0,
+                          ? 25.0
+                          : 18.0,
                       fontWeight: FontWeight.w500,
                       color: (_wallet.cashOutFormField?.isNotEmpty ?? false)
                           ? Colors.black
@@ -291,9 +308,9 @@ class _WalletsState extends State<Wallets> {
               },
               decoration: textFieldStyle(
                   label: f.name,
-                  labelStyle: const TextStyle(fontSize: 25),
+                  labelStyle: const TextStyle(fontSize: 21),
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
             );
           case "number":
@@ -325,7 +342,7 @@ class _WalletsState extends State<Wallets> {
                   maxLength: f.inputOption?.maxLength,
                   style: TextStyle(
                       fontSize:
-                          f.inputNumberOption?.isMoney ?? false ? 25 : null),
+                          f.inputNumberOption?.isMoney ?? false ? 21 : null),
                   validator: (val) {
                     if (val!.isEmpty) {
                       return "${f.name} is required";
@@ -336,8 +353,8 @@ class _WalletsState extends State<Wallets> {
                     label: f.name,
                     prefix: f.inputNumberOption?.isMoney ?? false ? PESO : null,
                     labelStyle: const TextStyle(fontSize: 25),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 20),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     backgroundColor: ACCENT_PRIMARY.withOpacity(.03),
                   ),
                 ),
@@ -362,9 +379,9 @@ class _WalletsState extends State<Wallets> {
               },
               decoration: textFieldStyle(
                   label: f.name,
-                  labelStyle: const TextStyle(fontSize: 25),
+                  labelStyle: const TextStyle(fontSize: 21),
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
             );
           case "checkbox":
@@ -384,9 +401,9 @@ class _WalletsState extends State<Wallets> {
                 },
                 textFieldDecoration: textFieldStyle(
                     label: f.name,
-                    labelStyle: const TextStyle(fontSize: 25),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 20),
+                    labelStyle: const TextStyle(fontSize: 21),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
                 dropdownRadius: 5,
                 dropDownList: f.selectOption!.items!.map((e) {
@@ -409,16 +426,99 @@ class _WalletsState extends State<Wallets> {
           margin: const EdgeInsets.only(top: 15),
           child: Stack(
             children: [
+              SingleChildScrollView(
+                child: Container(
+                  padding: const EdgeInsets.only(bottom: 100),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (formFields != null &&
+                          formFields.isNotEmpty &&
+                          selectedWalletType != "")
+                        Center(
+                          child: SizedBox(
+                            width: 700,
+                            child: Column(
+                              children: [
+                                Text(
+                                  "${_selectedWallet.name.toUpperCase()} ${selectedWalletType.toUpperCase()}",
+                                  style: const TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.w700),
+                                ),
+                                Form(
+                                    key: formKey,
+                                    child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 15, vertical: 10),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            ...List.generate(
+                                                formFields.length,
+                                                (index) => Container(
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                            top: 10),
+                                                    child: generateForm(
+                                                        formFields[index]))),
+                                            const SizedBox(height: 10.0),
+                                            CheckBox(
+                                                title: "Include Fee",
+                                                onChanged: (val) => setState(
+                                                    () => includeFee = val)),
+                                            const SizedBox(height: 10.0),
+                                            const Divider(),
+                                            const SizedBox(height: 10.0),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                const Text("TOTAL",
+                                                    style: TextStyle(
+                                                        fontSize: 18.0)),
+                                                const SizedBox(width: 10.0),
+                                                const Text("•",
+                                                    style: TextStyle(
+                                                        fontSize: 18.0)),
+                                                const SizedBox(width: 10.0),
+                                                Text(
+                                                    "$PESO${NumberFormat('#,###').format(getTotal())}",
+                                                    style: const TextStyle(
+                                                        fontSize: 18.0))
+                                              ],
+                                            )
+                                          ],
+                                        ))),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if ((_selectedWallet.cashInFormField?.isEmpty ?? false) &&
+                          (_selectedWallet.cashOutFormField?.isEmpty ?? false))
+                        const Center(
+                          child: Text(
+                              "There are no Field Forms added on this Wallet"),
+                        )
+                      else if (selectedWalletType == "")
+                        showSelectedWalletType(_selectedWallet)
+                    ],
+                  ),
+                ),
+              ),
               Positioned(
                   bottom: 0,
                   left: 0,
                   child: Button(
                     label: "BACK",
-                    fontSize: 25,
+                    fontSize: 21,
                     icon: Icons.chevron_left_rounded,
                     textColor: Colors.black87,
-                    width: 170,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10.0, horizontal: 20.0),
                     onPress: () => setState(() {
                       selectedWallet = "";
                       selectedWalletType = "";
@@ -432,94 +532,18 @@ class _WalletsState extends State<Wallets> {
                     bottom: 0,
                     right: 0,
                     child: Button(
-                        label: "SUBMIT",
+                        label: "REQUEST",
                         padding: const EdgeInsets.symmetric(
-                            vertical: 20, horizontal: 70),
+                            vertical: 10.0, horizontal: 20.0),
                         backgroundColor: ACCENT_SECONDARY,
                         borderColor: Colors.transparent,
-                        fontSize: 25,
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 10),
+                        isLoading: billBloc.state.requestStatus.isLoading,
+                        fontSize: 21,
                         onPress: () {
                           if (formKey.currentState!.validate()) {
                             handleRequest();
                           }
                         })),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (formFields != null &&
-                      formFields.isNotEmpty &&
-                      selectedWalletType != "")
-                    Center(
-                      child: SizedBox(
-                        width: 700,
-                        child: Column(
-                          children: [
-                            Text(
-                              "${_selectedWallet.name.toUpperCase()} ${selectedWalletType.toUpperCase()}",
-                              style: const TextStyle(
-                                  fontSize: 36, fontWeight: FontWeight.w700),
-                            ),
-                            Form(
-                                key: formKey,
-                                child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 15, vertical: 10),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        ...List.generate(
-                                            formFields.length,
-                                            (index) => Container(
-                                                margin: const EdgeInsets.only(
-                                                    top: 20),
-                                                child: generateForm(
-                                                    formFields[index]))),
-                                        const SizedBox(height: 20.0),
-                                        CheckBox(
-                                            title: "Include Fee",
-                                            onChanged: (val) => setState(
-                                                () => includeFee = val)),
-                                        const SizedBox(height: 20.0),
-                                        const Divider(),
-                                        const SizedBox(height: 20.0),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            const Text("TOTAL",
-                                                style:
-                                                    TextStyle(fontSize: 18.0)),
-                                            const SizedBox(width: 10.0),
-                                            const Text("•",
-                                                style:
-                                                    TextStyle(fontSize: 18.0)),
-                                            const SizedBox(width: 10.0),
-                                            Text(
-                                                "$PESO${NumberFormat('#,###').format(getTotal())}",
-                                                style: const TextStyle(
-                                                    fontSize: 18.0))
-                                          ],
-                                        )
-                                      ],
-                                    ))),
-                          ],
-                        ),
-                      ),
-                    ),
-                  if ((_selectedWallet.cashInFormField?.isEmpty ?? false) &&
-                      (_selectedWallet.cashOutFormField?.isEmpty ?? false))
-                    const Center(
-                      child:
-                          Text("There are no Field Forms added on this Wallet"),
-                    )
-                  else if (selectedWalletType == "")
-                    showSelectedWalletType(_selectedWallet)
-                ],
-              )
             ],
           ),
         ),

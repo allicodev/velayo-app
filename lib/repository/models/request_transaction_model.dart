@@ -14,6 +14,7 @@ class RequestTransaction {
   String? portal;
   String? receiverName;
   String? recieverNum;
+  int queue;
 
   RequestTransaction({
     required this.type,
@@ -28,6 +29,7 @@ class RequestTransaction {
     this.portal,
     this.receiverName,
     this.recieverNum,
+    required this.queue,
   });
 
   Map<String, dynamic> toMap() {
@@ -44,6 +46,7 @@ class RequestTransaction {
       'portal': portal,
       'receiverName': receiverName,
       'recieverNum': recieverNum,
+      'queue': queue
     };
   }
 
@@ -70,22 +73,3 @@ class TransactionHistory {
 
   String toJson() => json.encode(toMap());
 }
-
-//  let transaction: Transaction = {
-//       type: "bills",
-//       sub_type: biller_name,
-//       transactionDetails: bill,
-//       fee,
-//       amount,
-//       tellerId,
-//       branchId,
-//       billerId,
-//       ...(online ? online : {}),
-//       history: [
-//         {
-//           description: "First  Transaction requested",
-//           status: "pending",
-//           createdAt: new Date(),
-//         },
-//       ],
-//     };

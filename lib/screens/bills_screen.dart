@@ -4,12 +4,12 @@ import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';
+import 'package:velayo_flutterapp/repository/bloc/util/util_bloc.dart';
 import 'package:velayo_flutterapp/repository/models/bills_model.dart' as _;
 import 'package:velayo_flutterapp/repository/models/bills_model.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
@@ -41,6 +41,7 @@ class _BillsState extends State<Bills> {
   String searchedBiller = "";
   String selectedBiller = "";
   double amount = 0;
+  bool _isHovered = false;
 
   bool isOnlinePay = false;
 
@@ -72,6 +73,7 @@ class _BillsState extends State<Bills> {
         .firstWhere((e) => e.id == selectedBiller);
     Branch? currentBranch =
         BlocProvider.of<AppBloc>(context).state.selectedBranch;
+    int lastQueue = BlocProvider.of<UtilBloc>(context).state.lastQueue;
 
     inputData["fee"] = "${getFee()}_money";
     RequestTransaction tran = RequestTransaction(
@@ -82,7 +84,8 @@ class _BillsState extends State<Bills> {
         amount: amount,
         branchId: currentBranch?.id ?? "",
         billerId: selectedBill.id ?? "",
-        isOnlinePayment: isOnlinePay);
+        isOnlinePayment: isOnlinePay,
+        queue: lastQueue + 1);
 
     if (isOnlinePay) {
       tran.portal = onlinePaymentInput["portal"];
@@ -90,8 +93,21 @@ class _BillsState extends State<Bills> {
       tran.recieverNum = onlinePaymentInput["recieverNum"];
     }
 
-    BlocProvider.of<BillsBloc>(context)
-        .add(ReqTransaction(requestTransaction: tran));
+    BlocProvider.of<BillsBloc>(context).add(ReqTransaction(
+        requestTransaction: tran,
+        onDone: (data) {
+          Map<String, dynamic> request = {
+            "transactionId": data["_id"],
+            "branchId": data["branchId"],
+            "billingType": "bills",
+            "queue": data["queue"]
+          };
+
+          BlocProvider.of<UtilBloc>(context).add(NewQueue(
+              request: request,
+              branchId: data["branchId"],
+              callback: (resp) {}));
+        }));
   }
 
   @override
@@ -118,9 +134,9 @@ class _BillsState extends State<Bills> {
               decoration: textFieldStyle(
                   label: "Portal (Payment Wallet Used)",
                   floatingLabelBehavior: FloatingLabelBehavior.never,
-                  labelStyle: const TextStyle(fontSize: 25),
+                  labelStyle: const TextStyle(fontSize: 21.0),
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
             ),
             const SizedBox(height: 10),
@@ -138,9 +154,9 @@ class _BillsState extends State<Bills> {
                   label:
                       "Sender Name (Payees name of payment wallet being sent)",
                   floatingLabelBehavior: FloatingLabelBehavior.never,
-                  labelStyle: const TextStyle(fontSize: 25),
+                  labelStyle: const TextStyle(fontSize: 21.0),
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
             ),
             const SizedBox(height: 10),
@@ -156,10 +172,10 @@ class _BillsState extends State<Bills> {
               },
               decoration: textFieldStyle(
                   label: "Sender Number/Account Number",
-                  labelStyle: const TextStyle(fontSize: 25),
+                  labelStyle: const TextStyle(fontSize: 21.0),
                   floatingLabelBehavior: FloatingLabelBehavior.never,
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
             )
           ],
@@ -177,82 +193,86 @@ class _BillsState extends State<Bills> {
         _bills = bills;
       }
 
-      return Container(
-        width: MediaQuery.of(context).size.width * 0.75,
-        margin: const EdgeInsets.only(top: 15),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  "SELECT BILLER",
-                  style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.w700),
-                ),
-                SizedBox(
-                  width: 300,
-                  child: TextFormField(
-                    onChanged: (val) => setState(() => searchedBiller = val),
-                    decoration: textFieldStyle(
-                        label: "Search Biller",
-                        prefixIcon: const Icon(Icons.search),
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
+      return Expanded(
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.75,
+          margin: const EdgeInsets.only(top: 15),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "SELECT BILLER",
+                    style:
+                        TextStyle(fontSize: 25.0, fontWeight: FontWeight.w700),
                   ),
-                ),
-              ],
-            ),
-            const Divider(),
-            SingleChildScrollView(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.78,
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisSpacing: 20,
-                    mainAxisSpacing: 20,
-                    childAspectRatio: 16 / 9,
-                    crossAxisCount: 4,
+                  SizedBox(
+                    width: 300,
+                    child: TextFormField(
+                      onChanged: (val) => setState(() => searchedBiller = val),
+                      decoration: textFieldStyle(
+                          label: "Search Biller",
+                          prefixIcon: const Icon(Icons.search),
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
+                    ),
                   ),
-                  itemCount: _bills.length,
-                  itemBuilder: (context, index) => Column(
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                        child: InkWell(
-                          onTap: () => setState(
-                              () => selectedBiller = _bills[index].id ?? ""),
-                          hoverColor: ACCENT_SECONDARY.withOpacity(0.7),
+                ],
+              ),
+              const Divider(),
+              SingleChildScrollView(
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisSpacing: 20,
+                      mainAxisSpacing: 20,
+                      childAspectRatio: 1 / 1,
+                      crossAxisCount: 4,
+                    ),
+                    itemCount: _bills.length,
+                    itemBuilder: (context, index) => Column(
+                      children: [
+                        Material(
+                          color: Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            height: 140,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black45),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Center(
-                              child: Text(
-                                "Image is here",
-                                style: TextStyle(color: Colors.black38),
+                          child: InkWell(
+                            onTap: () => setState(
+                                () => selectedBiller = _bills[index].id ?? ""),
+                            hoverColor: ACCENT_SECONDARY.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(10),
+                            child: Container(
+                              height: 100,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.black45),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  "Image is here",
+                                  style: TextStyle(color: Colors.black38),
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      Text(
-                        _bills[index].name,
-                        style: const TextStyle(
-                            fontSize: 16.0, fontWeight: FontWeight.w500),
-                      )
-                    ],
+                        Text(
+                          _bills[index].name,
+                          style: const TextStyle(
+                              fontSize: 16.0, fontWeight: FontWeight.w500),
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
@@ -264,28 +284,32 @@ class _BillsState extends State<Bills> {
       Widget generateForm(_.FormField f) {
         switch (f.type) {
           case "input":
-            return TextFormField(
-              onChanged: (val) => updateInputDate(f.name, val),
-              maxLength: f.inputOption?.maxLength,
-              style: const TextStyle(fontSize: 21),
-              validator: (val) {
-                if (val!.isEmpty) {
-                  return "${f.name} is required";
-                }
+            return Stack(
+              children: [
+                TextFormField(
+                  onChanged: (val) => updateInputDate(f.name, val),
+                  maxLength: f.inputOption?.maxLength,
+                  style: const TextStyle(fontSize: 21),
+                  validator: (val) {
+                    if (val!.isEmpty) {
+                      return "${f.name} is required";
+                    }
 
-                if (f.inputOption?.minLength != null &&
-                    val.length < f.inputOption!.minLength!) {
-                  return "${f.name} has a minimum length of ${f.inputOption!.minLength}";
-                }
+                    if (f.inputOption?.minLength != null &&
+                        val.length < f.inputOption!.minLength!) {
+                      return "${f.name} has a minimum length of ${f.inputOption!.minLength}";
+                    }
 
-                return null;
-              },
-              decoration: textFieldStyle(
-                  label: f.name,
-                  labelStyle: const TextStyle(fontSize: 25),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-                  backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
+                    return null;
+                  },
+                  decoration: textFieldStyle(
+                      label: f.name,
+                      labelStyle: const TextStyle(fontSize: 21.0),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
+                ),
+              ],
             );
           case "number":
             return Column(
@@ -317,7 +341,7 @@ class _BillsState extends State<Bills> {
                   maxLength: f.inputOption?.maxLength,
                   style: TextStyle(
                       fontSize:
-                          f.inputNumberOption?.isMoney ?? false ? 25 : null),
+                          f.inputNumberOption?.isMoney ?? false ? 21 : null),
                   validator: (val) {
                     if (val!.isEmpty) {
                       return "${f.name} is required";
@@ -328,8 +352,8 @@ class _BillsState extends State<Bills> {
                     label: f.name,
                     prefix: f.inputNumberOption?.isMoney ?? false ? PESO : null,
                     labelStyle: const TextStyle(fontSize: 25),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 20),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     backgroundColor: ACCENT_PRIMARY.withOpacity(.03),
                   ),
                 ),
@@ -370,9 +394,9 @@ class _BillsState extends State<Bills> {
                 clearIconProperty: IconProperty(color: ACCENT_SECONDARY),
                 textFieldDecoration: textFieldStyle(
                     label: f.name,
-                    labelStyle: const TextStyle(fontSize: 25),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 20),
+                    labelStyle: const TextStyle(fontSize: 21.0),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
                 dropdownRadius: 5,
                 dropDownList: f.selectOption!.items!.map((e) {
@@ -417,7 +441,7 @@ class _BillsState extends State<Bills> {
                                 Text(
                                   selectedBill.name,
                                   style: const TextStyle(
-                                      fontSize: 36,
+                                      fontSize: 28,
                                       fontWeight: FontWeight.w700),
                                 ),
                                 Form(
@@ -434,10 +458,10 @@ class _BillsState extends State<Bills> {
                                                 (index) => Container(
                                                     margin:
                                                         const EdgeInsets.only(
-                                                            top: 20),
+                                                            top: 10),
                                                     child: generateForm(
                                                         formFields[index]))),
-                                            const SizedBox(height: 20.0),
+                                            const SizedBox(height: 10.0),
                                             CheckBox(
                                                 title: "Pay Online",
                                                 onChanged: (val) => setState(
@@ -446,7 +470,7 @@ class _BillsState extends State<Bills> {
                                               const SizedBox(height: 15.0),
                                               onlinePaymentForm()
                                             ],
-                                            const SizedBox(height: 20.0),
+                                            const SizedBox(height: 10.0),
                                             const Divider(),
                                             const SizedBox(height: 20.0),
                                             Row(
@@ -483,15 +507,17 @@ class _BillsState extends State<Bills> {
                 ),
               ),
               Positioned(
-                bottom: 0,
+                bottom: MediaQuery.of(context).viewInsets.bottom,
                 left: 0,
                 child: Button(
                   label: "BACK",
-                  fontSize: 25,
-                  icon: Icons.chevron_left_rounded,
+                  fontSize: 21.0,
                   textColor: Colors.black87,
-                  width: 170,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  backgroundColor: Colors.white,
+                  borderColor: Colors.black45,
+                  icon: Icons.chevron_left_rounded,
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 10.0, horizontal: 20.0),
                   onPress: () => setState(() {
                     selectedBiller = "";
                     amount = 0;
@@ -503,12 +529,12 @@ class _BillsState extends State<Bills> {
                   right: 0,
                   child: Button(
                       isLoading: billBloc.state.requestStatus.isLoading,
-                      label: "SUBMIT",
+                      label: "REQUEST",
                       padding: const EdgeInsets.symmetric(
-                          vertical: 20, horizontal: 70),
+                          vertical: 10.0, horizontal: 20.0),
                       backgroundColor: ACCENT_SECONDARY,
                       borderColor: Colors.transparent,
-                      fontSize: 25,
+                      fontSize: 21.0,
                       onPress: () {
                         if (formKey.currentState!.validate()) {
                           if (isOnlinePay &&
