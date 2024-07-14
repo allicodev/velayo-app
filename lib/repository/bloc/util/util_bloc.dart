@@ -27,8 +27,8 @@ class UtilBloc extends Bloc<UtilEvents, UtilState> {
       );
 
       if (response.response["success"]) {
-        event.callback(true);
         add(GetLastQueue(branchId: event.branchId));
+        event.callback(true);
       }
     } catch (error) {
       emit(state.copyWith(status: UtilStatus.error));

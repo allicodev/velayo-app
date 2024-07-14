@@ -13,6 +13,7 @@ import 'package:velayo_flutterapp/repository/models/request_transaction_model.da
 import 'package:velayo_flutterapp/repository/models/settings_model.dart';
 import 'package:velayo_flutterapp/screens/bills_screen.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
+import 'package:velayo_flutterapp/utilities/printer.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
 import 'package:velayo_flutterapp/widgets/form/textfieldstyle.dart';
 import 'package:velayo_flutterapp/widgets/radiogroup.dart';
@@ -93,7 +94,17 @@ class _LoadScreenState extends State<LoadScreen> {
           BlocProvider.of<UtilBloc>(context).add(NewQueue(
               request: request,
               branchId: data["branchId"],
-              callback: (resp) {}));
+              callback: (resp) async {
+                if (resp) {
+                  await Printer.printQueue(
+                          BlocProvider.of<UtilBloc>(context).state.lastQueue)
+                      .then((e) {
+                    if (e) {
+                      Navigator.pushNamed(context, '/request-success');
+                    }
+                  });
+                }
+              }));
         }));
   }
 

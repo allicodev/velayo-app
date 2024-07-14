@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/branch/branch_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/util/util_bloc.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
+import 'package:velayo_flutterapp/utilities/printer.dart';
 import 'package:velayo_flutterapp/utilities/shared_prefs.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
 import 'package:velayo_flutterapp/widgets/form/textfieldstyle.dart';
@@ -51,9 +52,13 @@ class _ShopeeCollectScreenState extends State<ShopeeCollectScreen> {
       BlocProvider.of<UtilBloc>(context).add(NewQueue(
           request: request,
           branchId: branchId,
-          callback: (resp) {
+          callback: (resp) async {
             if (resp) {
-              Navigator.pushNamed(context, '/request-success');
+              await Printer.printQueue(utilBloc.state.lastQueue).then((e) {
+                if (e) {
+                  Navigator.pushNamed(context, '/request-success');
+                }
+              });
             }
           }));
     }

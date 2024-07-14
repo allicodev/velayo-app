@@ -4,7 +4,6 @@ import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
@@ -17,6 +16,7 @@ import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/repository/models/request_transaction_model.dart';
 import 'package:velayo_flutterapp/screens/error_screen.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
+import 'package:velayo_flutterapp/utilities/printer.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
 import 'package:velayo_flutterapp/widgets/checkbox.dart';
 import 'package:velayo_flutterapp/widgets/form/textfieldstyle.dart';
@@ -115,6 +115,7 @@ class _BillsState extends State<Bills> {
   Widget build(BuildContext context) {
     final billBloc = context.read<BillsBloc>();
     final appBloc = context.read<AppBloc>();
+    final utilBloc = context.watch<UtilBloc>();
 
     Widget onlinePaymentForm() {
       return Form(
@@ -550,7 +551,7 @@ class _BillsState extends State<Bills> {
     }
 
     return BlocListener<BillsBloc, BillState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state.requestStatus.isError) {
           showTopSnackBar(
               Overlay.of(context),
@@ -563,7 +564,11 @@ class _BillsState extends State<Bills> {
         }
 
         if (state.requestStatus.isSuccess) {
-          Navigator.pushNamed(context, '/request-success');
+          await Printer.printQueue(utilBloc.state.lastQueue).then((e) {
+            if (e) {
+              Navigator.pushNamed(context, '/request-success');
+            }
+          });
         }
       },
       child: appBloc.state.selectedBranch == null

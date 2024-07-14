@@ -116,10 +116,6 @@ class _HomeScreenState extends State<HomeScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           GestureDetector(
-            onTap: () {
-              Printer printer = Printer();
-              printer.sample();
-            },
             onLongPress: () {
               showDialog(
                   context: context,
@@ -268,20 +264,16 @@ class _HomeScreenState extends State<HomeScreen>
                         utilBloc.add(NewQueue(
                             request: request,
                             branchId: branchId,
-                            callback: (resp) {
+                            callback: (resp) async {
                               if (resp) {
-                                Navigator.pushNamed(
-                                    context, '/request-success');
-                                // showTopSnackBar(
-                                //     Overlay.of(context),
-                                //     const CustomSnackBar.success(
-                                //       message:
-                                //           "Print Successfully. Please get you queue. Thank you",
-                                //     ),
-                                //     snackBarPosition: SnackBarPosition.bottom,
-                                //     animationDuration:
-                                //         const Duration(milliseconds: 700),
-                                //     displayDuration: const Duration(seconds: 1));
+                                await Printer.printQueue(
+                                        utilBloc.state.lastQueue)
+                                    .then((e) {
+                                  if (e) {
+                                    Navigator.pushNamed(
+                                        context, '/request-success');
+                                  }
+                                });
                               }
                             }));
                       },

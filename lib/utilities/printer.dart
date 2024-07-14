@@ -1,10 +1,28 @@
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/services.dart';
 
-class Printer {
-  BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+abstract class Printer {
+  static BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
 
-  sample() async {
+  static Future<bool> printQueue(int queue) async {
+    bluetooth.printCustom(
+        "Velayo Queue APP", Size.extraLarge.val, Align.center.val);
+    bluetooth.printCustom(
+        "Your Number is", Size.boldLarge.val, Align.center.val);
+    bluetooth.printNewLine();
+    bluetooth.printCustom(
+        queue.toString(), Size.extraLarge.val, Align.center.val);
+    bluetooth.printNewLine();
+    bluetooth.printCustom("Your number will be called shortly",
+        Size.boldLarge.val, Align.center.val);
+    bluetooth.print3Column("", "2024-07-13", "04:22:50", Size.bold.val);
+    bluetooth.printNewLine();
+    bluetooth.paperCut();
+
+    return true;
+  }
+
+  static void sample() async {
     ///image from Asset
     ByteData bytesAsset = await rootBundle.load("assets/images/yourlogo.png");
     Uint8List imageBytesFromAsset = bytesAsset.buffer

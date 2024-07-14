@@ -76,7 +76,7 @@ class _AdminScreenState extends State<AdminScreen> {
                           Text(
                             admin_home[i],
                             style: TextStyle(
-                                fontSize: 22.0,
+                                fontSize: 18.0,
                                 color: selectedButton == admin_home[i]
                                     ? Colors.white
                                     : Colors.black),

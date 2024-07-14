@@ -19,6 +19,7 @@ import 'package:velayo_flutterapp/repository/models/bills_model.dart' as _;
 import 'package:velayo_flutterapp/screens/bills_screen.dart';
 import 'package:velayo_flutterapp/screens/error_screen.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
+import 'package:velayo_flutterapp/utilities/printer.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
 import 'package:velayo_flutterapp/widgets/checkbox.dart';
 import 'package:velayo_flutterapp/widgets/form/textfieldstyle.dart';
@@ -108,7 +109,17 @@ class _WalletsState extends State<Wallets> {
           BlocProvider.of<UtilBloc>(context).add(NewQueue(
               request: request,
               branchId: data["branchId"],
-              callback: (resp) {}));
+              callback: (resp) async {
+                if (resp) {
+                  await Printer.printQueue(
+                          BlocProvider.of<UtilBloc>(context).state.lastQueue)
+                      .then((e) {
+                    if (e) {
+                      Navigator.pushNamed(context, '/request-success');
+                    }
+                  });
+                }
+              }));
         }));
   }
 
