@@ -315,7 +315,9 @@ class _LoadScreenState extends State<LoadScreen> {
                                     label: isDisabled(
                                             state.settings, selectedProvider)
                                         ? "Provider is Temporarily Unavailable"
-                                        : "SUBMIT",
+                                        : !state.isBTConnected
+                                            ? "PRINTER NOT CONNECTED"
+                                            : "SUBMIT",
                                     padding: const EdgeInsets.all(20),
                                     backgroundColor: ACCENT_SECONDARY,
                                     borderColor: Colors.transparent,
@@ -323,8 +325,9 @@ class _LoadScreenState extends State<LoadScreen> {
                                         billBloc.state.requestStatus.isLoading,
                                     fontSize: 21,
                                     margin: const EdgeInsets.only(top: 10.0),
-                                    onPress: isDisabled(
-                                            state.settings, selectedProvider)
+                                    onPress: isDisabled(state.settings,
+                                                selectedProvider) ||
+                                            state.isBTConnected
                                         ? null
                                         : () {
                                             if (formKey.currentState!

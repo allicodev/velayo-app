@@ -10,7 +10,7 @@ class Branch {
   final String address;
   final String device;
   final String spm;
-  final List<ItemsWithStock> items;
+  final List<ItemsWithStock>? items;
   final DateTime? createdAt;
   final String? pin;
 
@@ -19,7 +19,7 @@ class Branch {
       required this.address,
       required this.device,
       required this.spm,
-      required this.items,
+      this.items,
       this.pin,
       this.createdAt});
 

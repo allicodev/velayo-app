@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:velayo_flutterapp/repository/errors.dart';
 import 'package:velayo_flutterapp/repository/models/bills_model.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
@@ -43,7 +45,9 @@ class Service {
   }
 
   getBranch() async {
-    final response = await APIServices.get(endpoint: "/api/branch");
+    final response = await APIServices.get(endpoint: "/api/branch", query: {
+      "project": jsonEncode({"items": 0})
+    });
     if (response is Success) {
       if (response.response["data"].isNotEmpty) {
         return List<Branch>.from(

@@ -37,7 +37,6 @@ class _InitializeState extends State<InitializeScreen> {
 
   Future<void> checkConnectivity() async {
     setState(() => initialState = "loading");
-
     await Future.delayed(const Duration(milliseconds: 500));
     var connectivityResult = await Connectivity().checkConnectivity();
 

@@ -1,25 +1,33 @@
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:velayo_flutterapp/repository/models/branch_model.dart';
 import 'package:velayo_flutterapp/repository/models/item_model.dart';
 import 'package:velayo_flutterapp/repository/models/settings_model.dart';
 import 'package:velayo_flutterapp/repository/repository.dart';
+import 'package:velayo_flutterapp/utilities/bloc_helper.dart';
 
 part 'app_event.dart';
 part 'app_state.dart';
 
-class AppBloc extends Bloc<AppEvents, AppState> {
-  AppBloc({
-    required this.repo,
-  }) : super(AppState()) {
+class AppBloc extends Bloc<AppEvents, AppState>
+    with BlocHelper<AppEvents, AppState> {
+  AppBloc({required this.repo, required this.navigatorKey})
+      : super(const AppState()) {
     on<UpdateStatus>(_updateStatus);
     on<SetSelectedBranch>(_setSelectedBranch);
     on<GetSettings>(_getSettings);
     on<UpdatePin>(_updatePin);
     on<GetItemCategory>(_getItemCategories);
+    on<InitBluetooth>(_initBluetooth);
   }
 
   final Repository repo;
+  final GlobalKey<NavigatorState> navigatorKey;
 
   void _updateStatus(UpdateStatus event, Emitter<AppState> emit) {
     emit(
@@ -75,5 +83,65 @@ class AppBloc extends Bloc<AppEvents, AppState> {
     } catch (error) {
       emit(state.copyWith(statusSetting: SettingStatus.error));
     }
+  }
+
+  void _initBluetooth(InitBluetooth event, Emitter<AppState> emit) async {
+    BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
+    try {
+      List<BluetoothDevice> devices = [];
+      devices = await bluetooth.getBondedDevices();
+      if (devices.isEmpty) {
+        _showSnackBar("ERROR", "No nearby bluetooth printer detected", emit);
+      } else {
+        BluetoothDevice? printerDevice =
+            devices.where((e) => e.name == "BlueTooth Printer").firstOrNull;
+
+        if (printerDevice != null) {
+          bluetooth.isConnected.then((e) => bluetooth.connect(printerDevice));
+          _showSnackBar("SUCCESS", "Bluetooth Connected", emit);
+        } else {
+          _showSnackBar("ERROR", "Not connected to printer", emit);
+        }
+      }
+    } on PlatformException {}
+
+    // handle bluetooth status change
+    bluetooth.onStateChanged().listen((_state) {
+      switch (_state) {
+        case BlueThermalPrinter.CONNECTED:
+          _showSnackBar("SUCCESS", "Bluetooth Connected", emit);
+          break;
+        case BlueThermalPrinter.DISCONNECTED:
+          _showSnackBar("ERROR", "Bluetooth is Disconnected", emit);
+          break;
+        case BlueThermalPrinter.STATE_TURNING_ON:
+          _showSnackBar("SUCCESS", "Bluetooth is turned on", emit);
+          break;
+        case BlueThermalPrinter.STATE_TURNING_OFF:
+          _showSnackBar("ERROR", "Bluetooth is turned off", emit);
+          break;
+
+        default:
+          break;
+      }
+    });
+  }
+
+  _showSnackBar(String status, String message, Emitter<AppState> emit) {
+    emit(state.copyWith(isBTConnected: status == "ERROR" ? false : true));
+
+    showTopSnackBar(
+        navigatorKey.currentState!.overlay!,
+        status == "ERROR"
+            ? CustomSnackBar.error(
+                message: message,
+              )
+            : CustomSnackBar.success(
+                message: message,
+              ),
+        snackBarPosition: SnackBarPosition.bottom,
+        animationDuration: const Duration(milliseconds: 700),
+        displayDuration: const Duration(seconds: 1));
   }
 }

@@ -24,3 +24,5 @@ class UpdatePin extends AppEvents {
   String pin;
   UpdatePin({required this.id, required this.pin});
 }
+
+class InitBluetooth extends AppEvents {}

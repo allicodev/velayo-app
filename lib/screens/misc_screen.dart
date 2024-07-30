@@ -277,13 +277,16 @@ class _MiscScreenState extends State<MiscScreen> {
                           bottom: 0,
                           right: 0,
                           child: Button(
-                              label: "Print Queue",
+                              label: state.isBTConnected
+                                  ? "Print Queue"
+                                  : "PRINTER NOT CONNECTED",
                               icon: Icons.login,
                               textColor: Colors.white,
                               backgroundColor: ACCENT_SECONDARY,
                               borderColor: Colors.transparent,
                               fontSize: 21.0,
-                              onPress: handleRequest)),
+                              onPress:
+                                  state.isBTConnected ? handleRequest : null)),
                   ]),
                 ],
               ),

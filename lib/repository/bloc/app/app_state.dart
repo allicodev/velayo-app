@@ -12,28 +12,32 @@ extension A on SettingStatus {
 class AppState extends Equatable {
   const AppState(
       {this.statusSetting = SettingStatus.initial,
+      this.isBTConnected = false,
       this.selectedBranch,
       this.settings,
       this.itemCategories});
 
   final SettingStatus statusSetting;
+  final bool isBTConnected;
   final Branch? selectedBranch;
   final Settings? settings;
   final List<ItemCategory>? itemCategories;
 
   @override
   List<Object?> get props =>
-      [selectedBranch, settings, statusSetting, itemCategories];
+      [selectedBranch, settings, statusSetting, itemCategories, isBTConnected];
 
   AppState copyWith(
       {Branch? selectedBranch,
       Settings? settings,
       SettingStatus? statusSetting,
-      List<ItemCategory>? itemCategories}) {
+      List<ItemCategory>? itemCategories,
+      bool? isBTConnected}) {
     return AppState(
         selectedBranch: selectedBranch ?? this.selectedBranch,
         settings: settings ?? this.settings,
         statusSetting: statusSetting ?? this.statusSetting,
-        itemCategories: itemCategories ?? this.itemCategories);
+        itemCategories: itemCategories ?? this.itemCategories,
+        isBTConnected: isBTConnected ?? this.isBTConnected);
   }
 }

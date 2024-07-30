@@ -5,10 +5,10 @@ import 'package:velayo_flutterapp/repository/models/etc.dart';
 const ACCENT_PRIMARY = Color(0xff56B3FA);
 const ACCENT_SECONDARY = Color.fromARGB(255, 44, 125, 179);
 
-const String IS_PODUCTION = "dev"; // dev | prod
+const String IS_PODUCTION = "prod"; // dev | prod
 
 getBaseUrl() {
-  return "https://2cf7-112-198-98-39.ngrok-free.app";
+  // return "https://e428-110-54-182-103.ngrok-free.app";
   if (IS_PODUCTION == "prod") return "https://velayo-eservice.vercel.app";
   if (IS_PODUCTION == "dev") return Env.LocalUrl;
 }

@@ -25,9 +25,7 @@ class BranchChooser extends StatelessWidget {
                           width: MediaQuery.of(context).size.width * 0.75,
                           height: MediaQuery.of(context).size.height * 0.8,
                           margin: const EdgeInsets.only(top: 15),
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          child: Container(),
                         )
                       : state.status.isError
                           ? const ErrorScreen(title: "Fetching Branches Error")

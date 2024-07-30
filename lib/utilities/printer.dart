@@ -1,5 +1,6 @@
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
 abstract class Printer {
   static BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
@@ -15,7 +16,8 @@ abstract class Printer {
     bluetooth.printNewLine();
     bluetooth.printCustom("Your number will be called shortly",
         Size.boldLarge.val, Align.center.val);
-    bluetooth.print3Column("", "2024-07-13", "04:22:50", Size.bold.val);
+    bluetooth.print3Column("", DateFormat('yyyy-MM-dd').format(DateTime.now()),
+        DateFormat('HH:mm:ss a').format(DateTime.now()), Size.bold.val);
     bluetooth.printNewLine();
     bluetooth.paperCut();
 

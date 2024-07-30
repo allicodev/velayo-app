@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/branch/branch_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/util/util_bloc.dart';
 import 'package:velayo_flutterapp/utilities/constant.dart';
@@ -40,6 +41,7 @@ class _ShopeeCollectScreenState extends State<ShopeeCollectScreen> {
   @override
   Widget build(BuildContext context) {
     final utilBloc = context.watch<UtilBloc>();
+    final appBloc = context.watch<AppBloc>();
 
     void handleRequest() {
       Map<String, dynamic> request = {
@@ -260,18 +262,22 @@ class _ShopeeCollectScreenState extends State<ShopeeCollectScreen> {
                     bottom: 0,
                     right: 0,
                     child: Button(
-                        label: "SUBMIT",
+                        label: appBloc.state.isBTConnected
+                            ? "SUBMIT"
+                            : "PRINTER NOT CONNECTED",
                         padding: const EdgeInsets.symmetric(
                             vertical: 10.0, horizontal: 20.0),
                         backgroundColor: ACCENT_SECONDARY,
                         borderColor: Colors.transparent,
                         fontSize: 21,
                         margin: const EdgeInsets.only(top: 10.0),
-                        onPress: () {
-                          if (formKey.currentState!.validate()) {
-                            handleRequest();
-                          }
-                        }))
+                        onPress: appBloc.state.isBTConnected
+                            ? () {
+                                if (formKey.currentState!.validate()) {
+                                  handleRequest();
+                                }
+                              }
+                            : null))
               ],
             ),
           );

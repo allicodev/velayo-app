@@ -543,18 +543,22 @@ class _WalletsState extends State<Wallets> {
                     bottom: 0,
                     right: 0,
                     child: Button(
-                        label: "REQUEST",
+                        label: appBloc.state.isBTConnected
+                            ? "REQUEST"
+                            : "PRINTER NOT CONNECTED",
                         padding: const EdgeInsets.symmetric(
                             vertical: 10.0, horizontal: 20.0),
                         backgroundColor: ACCENT_SECONDARY,
                         borderColor: Colors.transparent,
                         isLoading: billBloc.state.requestStatus.isLoading,
                         fontSize: 21,
-                        onPress: () {
-                          if (formKey.currentState!.validate()) {
-                            handleRequest();
-                          }
-                        })),
+                        onPress: appBloc.state.isBTConnected
+                            ? () {
+                                if (formKey.currentState!.validate()) {
+                                  handleRequest();
+                                }
+                              }
+                            : null)),
             ],
           ),
         ),

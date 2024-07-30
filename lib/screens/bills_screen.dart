@@ -531,19 +531,23 @@ class _BillsState extends State<Bills> {
                   right: 0,
                   child: Button(
                       isLoading: billBloc.state.requestStatus.isLoading,
-                      label: "REQUEST",
+                      label: appBloc.state.isBTConnected
+                          ? "REQUEST"
+                          : "PRINTER NOT CONNECTED",
                       padding: const EdgeInsets.symmetric(
                           vertical: 10.0, horizontal: 20.0),
                       backgroundColor: ACCENT_SECONDARY,
                       borderColor: Colors.transparent,
                       fontSize: 21.0,
-                      onPress: () {
-                        if (formKey.currentState!.validate()) {
-                          if (isOnlinePay &&
-                              formKey2.currentState!.validate()) {}
-                          handleRequest();
-                        }
-                      })),
+                      onPress: appBloc.state.isBTConnected
+                          ? () {
+                              if (formKey.currentState!.validate()) {
+                                if (isOnlinePay &&
+                                    formKey2.currentState!.validate()) {}
+                                handleRequest();
+                              }
+                            }
+                          : null)),
             ],
           ),
         ),
