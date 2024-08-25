@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +20,8 @@ import 'package:velayo_flutterapp/utilities/constant.dart';
 import 'package:velayo_flutterapp/utilities/printer.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
 import 'package:velayo_flutterapp/widgets/checkbox.dart';
+import 'package:velayo_flutterapp/widgets/form/c_input.dart';
+import 'package:velayo_flutterapp/widgets/form/c_input_number.dart';
 import 'package:velayo_flutterapp/widgets/form/textfieldstyle.dart';
 
 class Bills extends StatefulWidget {
@@ -42,80 +45,225 @@ class _BillsState extends State<Bills> {
   String searchedBiller = "";
   String selectedBiller = "";
   double amount = 0;
-  bool _isHovered = false;
 
   bool isOnlinePay = false;
 
-  updateInputDate(String key, dynamic value) {
+  BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
+  updateInputData(String key, dynamic value) {
     setState(() => inputData[key.toLowerCase().split(" ").join(("_"))] = value);
   }
 
-  double getFee() {
-    Bill selectedBill = BlocProvider.of<BillsBloc>(context)
-        .state
-        .bills
-        .firstWhere((e) => e.id == selectedBiller);
-    if (selectedBiller != "") {
-      if (amount / selectedBill.threshold > 0) {
-        int multiplier = (amount / selectedBill.threshold).floor();
-        return selectedBill.fee + selectedBill.additionalFee * multiplier;
-      } else {
-        return selectedBill.fee;
-      }
-    } else {
-      return 0;
-    }
+  updateOnlineData(String key, dynamic value) {
+    setState(() => onlinePaymentInput[key] = value);
   }
 
-  handleRequest() async {
-    Bill selectedBill = BlocProvider.of<BillsBloc>(context)
-        .state
-        .bills
-        .firstWhere((e) => e.id == selectedBiller);
-    Branch? currentBranch =
-        BlocProvider.of<AppBloc>(context).state.selectedBranch;
-    int lastQueue = BlocProvider.of<UtilBloc>(context).state.lastQueue;
+  @override
+  void initState() {
+    final appBloc = BlocProvider.of<AppBloc>(context);
 
-    inputData["fee"] = "${getFee()}_money";
-    RequestTransaction tran = RequestTransaction(
-        type: "bills",
-        sub_type: selectedBill.name,
-        transactionDetails: jsonEncode(inputData),
-        fee: getFee(),
-        amount: amount,
-        branchId: currentBranch?.id ?? "",
-        billerId: selectedBill.id ?? "",
-        isOnlinePayment: isOnlinePay,
-        queue: lastQueue + 1);
+    // handle bluetooth status change
+    bluetooth.onStateChanged().listen((_state) {
+      switch (_state) {
+        case BlueThermalPrinter.CONNECTED:
+          appBloc.add(UpdateBluetooth(isConnected: true));
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.success(
+                message: "Bluetooth Connected",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 1));
+          break;
+        case BlueThermalPrinter.DISCONNECTED:
+        case BlueThermalPrinter.STATE_OFF:
+          appBloc.add(UpdateBluetooth(isConnected: false));
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.error(
+                message: "Bluetooth is Disconnected",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 1));
+          break;
+        case BlueThermalPrinter.STATE_ON:
+          if (!appBloc.state.isBTConnected) {
+            showTopSnackBar(
+                Overlay.of(context),
+                const CustomSnackBar.success(
+                  message: "Bluetooth is turned on",
+                ),
+                snackBarPosition: SnackBarPosition.bottom,
+                animationDuration: const Duration(milliseconds: 700),
+                displayDuration: const Duration(seconds: 1));
+          }
+          appBloc.add(UpdateBluetooth(isConnected: true));
 
-    if (isOnlinePay) {
-      tran.portal = onlinePaymentInput["portal"];
-      tran.receiverName = onlinePaymentInput["receiverName"];
-      tran.recieverNum = onlinePaymentInput["recieverNum"];
-    }
+          break;
+        default:
+          return;
+      }
+    });
 
-    BlocProvider.of<BillsBloc>(context).add(ReqTransaction(
-        requestTransaction: tran,
-        onDone: (data) {
-          Map<String, dynamic> request = {
-            "transactionId": data["_id"],
-            "branchId": data["branchId"],
-            "billingType": "bills",
-            "queue": data["queue"]
-          };
-
-          BlocProvider.of<UtilBloc>(context).add(NewQueue(
-              request: request,
-              branchId: data["branchId"],
-              callback: (resp) {}));
-        }));
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final billBloc = context.read<BillsBloc>();
+    final billBloc = context.watch<BillsBloc>();
     final appBloc = context.read<AppBloc>();
     final utilBloc = context.watch<UtilBloc>();
+
+    Bill? selectedBill = billBloc.state.bills.isNotEmpty && selectedBiller != ""
+        ? billBloc.state.bills.firstWhere((e) => e.id == selectedBiller)
+        : null;
+
+    double getFee() {
+      if (selectedBiller != "") {
+        if (amount / selectedBill!.threshold > 0) {
+          int multiplier = (amount / selectedBill.threshold).floor();
+          return selectedBill.fee + selectedBill.additionalFee * multiplier;
+        } else {
+          return selectedBill.fee;
+        }
+      } else {
+        return 0;
+      }
+    }
+
+    handleRequest() async {
+      Branch? currentBranch = appBloc.state.selectedBranch;
+      int queue = utilBloc.state.lastQueue + 1;
+
+      inputData["fee"] = "${getFee()}_money";
+
+      RequestTransaction tran = RequestTransaction(
+          type: "bills",
+          sub_type: selectedBill?.name ?? "",
+          transactionDetails: jsonEncode(inputData),
+          fee: getFee(),
+          amount: amount,
+          branchId: currentBranch?.id ?? "",
+          billerId: selectedBill?.id ?? "",
+          isOnlinePayment: isOnlinePay,
+          queue: queue);
+
+      if (isOnlinePay) {
+        tran.portal = onlinePaymentInput["portal"];
+        tran.receiverName = onlinePaymentInput["receiverName"];
+        tran.recieverNum = onlinePaymentInput["recieverNum"];
+      }
+
+      billBloc.add(ReqTransaction(
+          requestTransaction: tran,
+          onDone: (data) {
+            Future.delayed(const Duration(milliseconds: 100));
+
+            Map<String, dynamic> request = {
+              "transactionId": data["_id"],
+              "branchId": data["branchId"],
+              "billingType": "bills",
+              "queue": queue
+            };
+
+            // ! check this if queue is right
+            utilBloc.add(NewQueue(
+                request: request,
+                branchId: data["branchId"],
+                callback: (resp) async {
+                  if (resp) {
+                    await Printer.printQueue(queue).then((e) {
+                      if (e is bool && e) {
+                        Navigator.pushNamed(context, '/request-success');
+                      } else {
+                        showTopSnackBar(
+                            Overlay.of(context),
+                            CustomSnackBar.error(
+                              message: e,
+                            ),
+                            snackBarPosition: SnackBarPosition.bottom,
+                            animationDuration:
+                                const Duration(milliseconds: 700),
+                            displayDuration: const Duration(seconds: 1));
+                      }
+                    });
+                  }
+                }));
+          }));
+    }
+
+    Widget showHeader() => Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "SELECT BILLER",
+              style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.w700),
+            ),
+            SizedBox(
+              width: 300,
+              child: TextFormField(
+                onChanged: (val) => setState(() => searchedBiller = val),
+                decoration: textFieldStyle(
+                    label: "Search Biller",
+                    prefixIcon: const Icon(Icons.search),
+                    floatingLabelBehavior: FloatingLabelBehavior.never,
+                    backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
+              ),
+            ),
+          ],
+        );
+
+    Widget showBillsLists(List<Bill> _bills) => SingleChildScrollView(
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+                childAspectRatio: 1 / 1,
+                crossAxisCount: 4,
+              ),
+              itemCount: _bills.length,
+              itemBuilder: (context, index) => Column(
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    child: InkWell(
+                      onTap: () => setState(
+                          () => selectedBiller = _bills[index].id ?? ""),
+                      hoverColor: ACCENT_SECONDARY.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black45),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            "Image is here",
+                            style: TextStyle(color: Colors.black38),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    _bills[index].name,
+                    style: const TextStyle(
+                        fontSize: 16.0, fontWeight: FontWeight.w500),
+                  )
+                ],
+              ),
+            ),
+          ),
+        );
 
     Widget onlinePaymentForm() {
       return Form(
@@ -125,7 +273,7 @@ class _BillsState extends State<Bills> {
           children: [
             TextFormField(
               onChanged: (val) =>
-                  setState(() => onlinePaymentInput["portal"] = val),
+                  setState(() => updateOnlineData("portal", val)),
               style: const TextStyle(fontSize: 21),
               validator: (val) {
                 if (val!.isEmpty) {
@@ -144,7 +292,7 @@ class _BillsState extends State<Bills> {
             const SizedBox(height: 10),
             TextFormField(
               onChanged: (val) =>
-                  setState(() => onlinePaymentInput["receiverName"] = val),
+                  setState(() => updateOnlineData("receiverName", val)),
               style: const TextStyle(fontSize: 21),
               validator: (val) {
                 if (val!.isEmpty) {
@@ -164,7 +312,7 @@ class _BillsState extends State<Bills> {
             const SizedBox(height: 10),
             TextFormField(
               onChanged: (val) =>
-                  setState(() => onlinePaymentInput["recieverNum"] = val),
+                  setState(() => updateOnlineData("recieverNum", val)),
               style: const TextStyle(fontSize: 21),
               validator: (val) {
                 if (val!.isEmpty) {
@@ -201,78 +349,9 @@ class _BillsState extends State<Bills> {
           margin: const EdgeInsets.only(top: 15),
           child: Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "SELECT BILLER",
-                    style:
-                        TextStyle(fontSize: 25.0, fontWeight: FontWeight.w700),
-                  ),
-                  SizedBox(
-                    width: 300,
-                    child: TextFormField(
-                      onChanged: (val) => setState(() => searchedBiller = val),
-                      decoration: textFieldStyle(
-                          label: "Search Biller",
-                          prefixIcon: const Icon(Icons.search),
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
-                          backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
-                    ),
-                  ),
-                ],
-              ),
+              showHeader(),
               const Divider(),
-              SingleChildScrollView(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.6,
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisSpacing: 20,
-                      mainAxisSpacing: 20,
-                      childAspectRatio: 1 / 1,
-                      crossAxisCount: 4,
-                    ),
-                    itemCount: _bills.length,
-                    itemBuilder: (context, index) => Column(
-                      children: [
-                        Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                          child: InkWell(
-                            onTap: () => setState(
-                                () => selectedBiller = _bills[index].id ?? ""),
-                            hoverColor: ACCENT_SECONDARY.withOpacity(0.7),
-                            borderRadius: BorderRadius.circular(10),
-                            child: Container(
-                              height: 100,
-                              decoration: BoxDecoration(
-                                border: Border.all(color: Colors.black45),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Center(
-                                child: Text(
-                                  "Image is here",
-                                  style: TextStyle(color: Colors.black38),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          _bills[index].name,
-                          style: const TextStyle(
-                              fontSize: 16.0, fontWeight: FontWeight.w500),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+              showBillsLists(_bills),
             ],
           ),
         ),
@@ -282,92 +361,83 @@ class _BillsState extends State<Bills> {
     Widget showSelectedBiller(List<_.Bill> bills) {
       Bill selectedBill = bills.firstWhere((e) => e.id == selectedBiller);
       List<_.FormField>? formFields = selectedBill.formField;
+      final appBloc = BlocProvider.of<AppBloc>(context);
 
       Widget generateForm(_.FormField f) {
         switch (f.type) {
           case "input":
-            return Stack(
-              children: [
-                TextFormField(
-                  onChanged: (val) => updateInputDate(f.name, val),
-                  maxLength: f.inputOption?.maxLength,
-                  style: const TextStyle(fontSize: 21),
-                  validator: (val) {
-                    if (val!.isEmpty) {
-                      return "${f.name} is required";
-                    }
+            return CInput(
+              onChanged: (val) => updateInputData(f.name, val),
+              maxLength: f.inputOption?.maxLength,
+              style: const TextStyle(fontSize: 21),
+              validator: (val) {
+                if (val!.isEmpty) {
+                  return "${f.name} is required";
+                }
 
-                    if (f.inputOption?.minLength != null &&
-                        val.length < f.inputOption!.minLength!) {
-                      return "${f.name} has a minimum length of ${f.inputOption!.minLength}";
-                    }
+                if (f.inputOption?.minLength != null &&
+                    val.length < f.inputOption!.minLength!) {
+                  return "${f.name} has a minimum length of ${f.inputOption!.minLength}";
+                }
 
-                    return null;
-                  },
-                  decoration: textFieldStyle(
-                      label: f.name,
-                      labelStyle: const TextStyle(fontSize: 21.0),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
-                ),
-              ],
+                return null;
+              },
+              decoration: textFieldStyle(
+                  label: f.name,
+                  labelStyle: const TextStyle(fontSize: 21.0),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  backgroundColor: ACCENT_PRIMARY.withOpacity(.03)),
             );
+
           case "number":
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                TextFormField(
-                  onChanged: (val) {
-                    if (val != "") {
-                      updateInputDate(
-                          f.name,
-                          (f.inputNumberOption?.isMoney ?? false) ||
-                                  (f.inputNumberOption!.mainAmount ?? false)
-                              ? "${int.parse(val.split(",").join())}_money"
-                              : int.parse(val.split(",").join()).toString());
-                      if (f.inputNumberOption?.mainAmount ?? false) {
-                        setState(
-                            () => amount = double.parse(val.split(",").join()));
-                      }
-                    } else {
-                      setState(() => amount = 0);
-                    }
-                  },
-                  inputFormatters: [
-                    if (f.inputNumberOption?.isMoney ?? false)
-                      DecimalFormatter()
-                    else
-                      FilteringTextInputFormatter.digitsOnly
-                  ],
-                  maxLength: f.inputOption?.maxLength,
-                  style: TextStyle(
-                      fontSize:
-                          f.inputNumberOption?.isMoney ?? false ? 21 : null),
-                  validator: (val) {
-                    if (val!.isEmpty) {
-                      return "${f.name} is required";
-                    }
-                    return null;
-                  },
-                  decoration: textFieldStyle(
-                    label: f.name,
-                    prefix: f.inputNumberOption?.isMoney ?? false ? PESO : null,
-                    labelStyle: const TextStyle(fontSize: 25),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    backgroundColor: ACCENT_PRIMARY.withOpacity(.03),
-                  ),
-                ),
-                if (f.inputNumberOption?.mainAmount ?? false)
-                  Text(
-                      "+$PESO${NumberFormat('#,###').format(getFee()).toString()} (fee)",
-                      style: const TextStyle(fontSize: 18.0))
+            return CInputNumber(
+              onChanged: (val) {
+                if (val != "") {
+                  updateInputData(
+                      f.name,
+                      (f.inputNumberOption?.isMoney ?? false) ||
+                              (f.inputNumberOption!.mainAmount ?? false)
+                          ? "${int.parse(val.split(",").join())}_money"
+                          : int.parse(val.split(",").join()).toString());
+                  if (f.inputNumberOption?.mainAmount ?? false) {
+                    setState(
+                        () => amount = double.parse(val.split(",").join()));
+                  }
+                } else {
+                  setState(() => amount = 0);
+                }
+              },
+              inputFormatters: [
+                if (f.inputNumberOption?.isMoney ?? false)
+                  DecimalFormatter()
+                else
+                  FilteringTextInputFormatter.digitsOnly
               ],
+              maxLength: f.inputOption?.maxLength,
+              style: TextStyle(
+                  fontSize: f.inputNumberOption?.isMoney ?? false ? 21 : null),
+              validator: (val) {
+                if (val!.isEmpty) {
+                  return "${f.name} is required";
+                }
+                return null;
+              },
+              decoration: textFieldStyle(
+                label: f.name,
+                prefix: f.inputNumberOption?.isMoney ?? false ? PESO : null,
+                labelStyle: const TextStyle(fontSize: 25),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                backgroundColor: ACCENT_PRIMARY.withOpacity(.03),
+              ),
+              isMainAmount: f.inputNumberOption?.mainAmount ?? false,
+              fee: getFee(),
             );
+
           case "textarea":
             return TextFormField(
-              onChanged: (val) => updateInputDate(f.name, val),
+              onChanged: (val) => updateInputData(f.name, val),
               minLines: f.textareaOption?.minRow ?? 1,
               maxLines: f.textareaOption?.maxRow ?? 9999,
               maxLength: f.inputOption?.maxLength,
@@ -388,7 +458,7 @@ class _BillsState extends State<Bills> {
           case "checkbox":
             return CheckBox(
               title: f.name,
-              onChanged: (val) => updateInputDate(f.name, val),
+              onChanged: (val) => updateInputData(f.name, val),
             );
           case "select":
             return DropDownTextField(
@@ -414,7 +484,7 @@ class _BillsState extends State<Bills> {
                   return null;
                 },
                 onChanged: (val) =>
-                    updateInputDate(f.name, (val as DropDownValueModel).value));
+                    updateInputData(f.name, (val as DropDownValueModel).value));
           default:
             return Container();
         }
@@ -542,8 +612,13 @@ class _BillsState extends State<Bills> {
                       onPress: appBloc.state.isBTConnected
                           ? () {
                               if (formKey.currentState!.validate()) {
-                                if (isOnlinePay &&
-                                    formKey2.currentState!.validate()) {}
+                                if (isOnlinePay) {
+                                  if (formKey2.currentState!.validate()) {
+                                    handleRequest();
+                                  }
+
+                                  return;
+                                }
                                 handleRequest();
                               }
                             }
@@ -560,19 +635,11 @@ class _BillsState extends State<Bills> {
           showTopSnackBar(
               Overlay.of(context),
               const CustomSnackBar.error(
-                message: "Server if offline",
+                message: "Server is offline",
               ),
               snackBarPosition: SnackBarPosition.bottom,
               animationDuration: const Duration(milliseconds: 700),
               displayDuration: const Duration(seconds: 1));
-        }
-
-        if (state.requestStatus.isSuccess) {
-          await Printer.printQueue(utilBloc.state.lastQueue).then((e) {
-            if (e) {
-              Navigator.pushNamed(context, '/request-success');
-            }
-          });
         }
       },
       child: appBloc.state.selectedBranch == null

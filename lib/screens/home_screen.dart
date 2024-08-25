@@ -1,3 +1,4 @@
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
@@ -34,8 +35,12 @@ class _HomeScreenState extends State<HomeScreen>
   String branchId = "";
   bool isValidating = false;
 
+  BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
   @override
   void initState() {
+    final appBloc = BlocProvider.of<AppBloc>(context);
+
     animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 100),
@@ -44,12 +49,13 @@ class _HomeScreenState extends State<HomeScreen>
     )..addListener(() {
         setState(() => _scaleTransformValue = 1 - animationController.value);
       });
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await getValue('selectedBranch').then((b) {
         BlocProvider.of<BranchBloc>(context).add(GetBranches(onDone: () {
           if (b != "") {
             branchId = b;
-            BlocProvider.of<AppBloc>(context).add(SetSelectedBranch(
+            appBloc.add(SetSelectedBranch(
                 branch: BlocProvider.of<BranchBloc>(context)
                     .state
                     .branches
@@ -60,6 +66,49 @@ class _HomeScreenState extends State<HomeScreen>
           }
         }));
       });
+    });
+
+    // handle bluetooth status change
+    bluetooth.onStateChanged().listen((_state) {
+      switch (_state) {
+        case BlueThermalPrinter.CONNECTED:
+          appBloc.add(UpdateBluetooth(isConnected: true));
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.success(
+                message: "Bluetooth Connected",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 1));
+          break;
+        case BlueThermalPrinter.DISCONNECTED:
+        case BlueThermalPrinter.STATE_OFF:
+          appBloc.add(UpdateBluetooth(isConnected: false));
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.error(
+                message: "Bluetooth is Disconnected",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 1));
+          break;
+        case BlueThermalPrinter.STATE_ON:
+          appBloc.add(UpdateBluetooth(isConnected: true));
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.success(
+                message: "Bluetooth is turned on",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 1));
+
+          break;
+        default:
+          return;
+      }
     });
 
     super.initState();
@@ -76,13 +125,12 @@ class _HomeScreenState extends State<HomeScreen>
                   elevation: 0,
                   child: BlocBuilder<AppBloc, AppState>(
                     builder: (context, state) {
-                      String adminPin = state.selectedBranch != null
-                          ? state.selectedBranch?.pin ?? ""
-                          : state.settings?.pin ?? "";
+                      String adminPin = state.settings?.pin ?? "";
 
                       if (adminPin == "") {
                         return const Center(child: CircularProgressIndicator());
                       }
+
                       return Container(
                           padding: const EdgeInsets.all(16.0),
                           width: 500,
@@ -165,7 +213,46 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget showNoOfferSelected() {
     final utilBloc = context.watch<UtilBloc>();
-    final appBLoc = context.watch<AppBloc>();
+    final appBloc = context.watch<AppBloc>();
+
+    String getLabel1() => utilBloc.state.status.isLoading
+        ? "Printing..."
+        : branchId == ""
+            ? "No Branch Selected"
+            : !appBloc.state.isBTConnected
+                ? "No Printer Connected"
+                : "PRINT A QUEUE";
+
+    newQueue() {
+      int lastQueue = utilBloc.state.lastQueue + 1;
+
+      Map<String, dynamic> request = {
+        "branchId": branchId,
+        "queue": lastQueue,
+      };
+
+      utilBloc.add(NewQueue(
+          request: request,
+          branchId: branchId,
+          callback: (resp) async {
+            if (resp) {
+              await Printer.printQueue(lastQueue).then((e) {
+                if (e is bool && e) {
+                  Navigator.pushNamed(context, '/request-success');
+                } else {
+                  showTopSnackBar(
+                      Overlay.of(context),
+                      CustomSnackBar.error(
+                        message: e,
+                      ),
+                      snackBarPosition: SnackBarPosition.bottom,
+                      animationDuration: const Duration(milliseconds: 700),
+                      displayDuration: const Duration(seconds: 1));
+                }
+              });
+            }
+          }));
+    }
 
     return Expanded(
       child: Column(
@@ -191,18 +278,12 @@ class _HomeScreenState extends State<HomeScreen>
           Transform.scale(
               scale: _scaleTransformValue,
               child: Button(
-                label: utilBloc.state.status.isLoading
-                    ? ""
-                    : branchId == ""
-                        ? "No Branch Selected"
-                        : !appBLoc.state.isBTConnected
-                            ? "No Printer Connected"
-                            : "PRINT A QUEUE",
+                label: getLabel1(),
                 textColor: Colors.black87,
                 isLoading: utilBloc.state.status.isLoading,
                 width: 200,
                 onPress: branchId == "" ||
-                        !appBLoc.state.isBTConnected ||
+                        !appBloc.state.isBTConnected ||
                         utilBloc.state.status.isLoading
                     ? null
                     : () async {
@@ -212,26 +293,7 @@ class _HomeScreenState extends State<HomeScreen>
                           () => animationController.reverse(),
                         );
 
-                        Map<String, dynamic> request = {
-                          "branchId": branchId,
-                          "queue": utilBloc.state.lastQueue + 1,
-                        };
-
-                        utilBloc.add(NewQueue(
-                            request: request,
-                            branchId: branchId,
-                            callback: (resp) async {
-                              if (resp) {
-                                await Printer.printQueue(
-                                        utilBloc.state.lastQueue)
-                                    .then((e) {
-                                  if (e) {
-                                    Navigator.pushNamed(
-                                        context, '/request-success');
-                                  }
-                                });
-                              }
-                            }));
+                        newQueue();
                       },
               ))
         ],

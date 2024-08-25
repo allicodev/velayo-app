@@ -5,7 +5,11 @@ import 'package:intl/intl.dart';
 abstract class Printer {
   static BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
 
-  static Future<bool> printQueue(int queue) async {
+  static Future<dynamic> printQueue(int queue) async {
+    bool? bt = await bluetooth.isConnected;
+
+    if (bt == null || !bt) return "Printer device is offline";
+
     bluetooth.printCustom(
         "Velayo Queue APP", Size.extraLarge.val, Align.center.val);
     bluetooth.printCustom(
@@ -19,7 +23,7 @@ abstract class Printer {
     bluetooth.print3Column("", DateFormat('yyyy-MM-dd').format(DateTime.now()),
         DateFormat('HH:mm:ss a').format(DateTime.now()), Size.bold.val);
     bluetooth.printNewLine();
-    bluetooth.paperCut();
+    // bluetooth.paperCut();
 
     return true;
   }

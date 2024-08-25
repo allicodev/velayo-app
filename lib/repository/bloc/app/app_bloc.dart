@@ -24,6 +24,7 @@ class AppBloc extends Bloc<AppEvents, AppState>
     on<UpdatePin>(_updatePin);
     on<GetItemCategory>(_getItemCategories);
     on<InitBluetooth>(_initBluetooth);
+    on<UpdateBluetooth>(_updateBluetooth);
   }
 
   final Repository repo;
@@ -105,32 +106,13 @@ class AppBloc extends Bloc<AppEvents, AppState>
         }
       }
     } on PlatformException {}
+  }
 
-    // handle bluetooth status change
-    bluetooth.onStateChanged().listen((_state) {
-      switch (_state) {
-        case BlueThermalPrinter.CONNECTED:
-          _showSnackBar("SUCCESS", "Bluetooth Connected", emit);
-          break;
-        case BlueThermalPrinter.DISCONNECTED:
-          _showSnackBar("ERROR", "Bluetooth is Disconnected", emit);
-          break;
-        case BlueThermalPrinter.STATE_TURNING_ON:
-          _showSnackBar("SUCCESS", "Bluetooth is turned on", emit);
-          break;
-        case BlueThermalPrinter.STATE_TURNING_OFF:
-          _showSnackBar("ERROR", "Bluetooth is turned off", emit);
-          break;
-
-        default:
-          break;
-      }
-    });
+  void _updateBluetooth(UpdateBluetooth event, Emitter<AppState> emit) {
+    emit(state.copyWith(isBTConnected: event.isConnected));
   }
 
   _showSnackBar(String status, String message, Emitter<AppState> emit) {
-    emit(state.copyWith(isBTConnected: status == "ERROR" ? false : true));
-
     showTopSnackBar(
         navigatorKey.currentState!.overlay!,
         status == "ERROR"

@@ -1,10 +1,10 @@
 import 'dart:convert';
 
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
@@ -40,6 +40,60 @@ class _WalletsState extends State<Wallets> {
   bool includeFee = false;
   double amount = 0;
   Map<String, dynamic> inputData = {};
+
+  BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
+  @override
+  void initState() {
+    final appBloc = BlocProvider.of<AppBloc>(context);
+
+    // handle bluetooth status change
+    bluetooth.onStateChanged().listen((_state) {
+      switch (_state) {
+        case BlueThermalPrinter.CONNECTED:
+          appBloc.add(UpdateBluetooth(isConnected: true));
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.success(
+                message: "Bluetooth Connected",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 1));
+          break;
+        case BlueThermalPrinter.DISCONNECTED:
+        case BlueThermalPrinter.STATE_OFF:
+          appBloc.add(UpdateBluetooth(isConnected: false));
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.error(
+                message: "Bluetooth is Disconnected",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 1));
+          break;
+        case BlueThermalPrinter.STATE_ON:
+          if (!appBloc.state.isBTConnected) {
+            showTopSnackBar(
+                Overlay.of(context),
+                const CustomSnackBar.success(
+                  message: "Bluetooth is turned on",
+                ),
+                snackBarPosition: SnackBarPosition.bottom,
+                animationDuration: const Duration(milliseconds: 700),
+                displayDuration: const Duration(seconds: 1));
+            appBloc.add(UpdateBluetooth(isConnected: true));
+          }
+
+          break;
+        default:
+          return;
+      }
+    });
+
+    super.initState();
+  }
 
   updateInputDate(String key, dynamic value) {
     setState(() => inputData[key.toLowerCase().split(" ").join(("_"))] = value);
@@ -79,7 +133,7 @@ class _WalletsState extends State<Wallets> {
         .state
         .wallets
         .firstWhere((e) => e.id == selectedWallet);
-    int lastQueue = BlocProvider.of<UtilBloc>(context).state.lastQueue;
+    int lastQueue = BlocProvider.of<UtilBloc>(context).state.lastQueue + 1;
 
     Branch? currentBranch =
         BlocProvider.of<AppBloc>(context).state.selectedBranch;
@@ -94,11 +148,13 @@ class _WalletsState extends State<Wallets> {
         branchId: currentBranch?.id ?? "",
         walletId: sWallet.id ?? "",
         isOnlinePayment: false,
-        queue: lastQueue + 1);
+        queue: lastQueue);
 
     BlocProvider.of<BillsBloc>(context).add(ReqTransaction(
         requestTransaction: tran,
         onDone: (data) {
+          Future.delayed(const Duration(milliseconds: 100));
+
           Map<String, dynamic> request = {
             "transactionId": data["_id"],
             "branchId": data["branchId"],
@@ -111,11 +167,18 @@ class _WalletsState extends State<Wallets> {
               branchId: data["branchId"],
               callback: (resp) async {
                 if (resp) {
-                  await Printer.printQueue(
-                          BlocProvider.of<UtilBloc>(context).state.lastQueue)
-                      .then((e) {
-                    if (e) {
+                  await Printer.printQueue(lastQueue).then((e) {
+                    if (e is bool && e) {
                       Navigator.pushNamed(context, '/request-success');
+                    } else {
+                      showTopSnackBar(
+                          Overlay.of(context),
+                          CustomSnackBar.error(
+                            message: e,
+                          ),
+                          snackBarPosition: SnackBarPosition.bottom,
+                          animationDuration: const Duration(milliseconds: 700),
+                          displayDuration: const Duration(seconds: 1));
                     }
                   });
                 }
@@ -126,7 +189,7 @@ class _WalletsState extends State<Wallets> {
   @override
   Widget build(BuildContext context) {
     final billBloc = context.read<BillsBloc>();
-    final appBloc = context.read<AppBloc>();
+    final appBloc = context.watch<AppBloc>();
 
     Widget showWalletList(List<Wallet> wallets) {
       var _wallets = [...wallets];
@@ -437,6 +500,46 @@ class _WalletsState extends State<Wallets> {
           margin: const EdgeInsets.only(top: 15),
           child: Stack(
             children: [
+              Positioned(
+                  bottom: 0,
+                  left: 0,
+                  child: Button(
+                    label: "BACK",
+                    fontSize: 21,
+                    icon: Icons.chevron_left_rounded,
+                    textColor: Colors.black87,
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10.0, horizontal: 20.0),
+                    onPress: () => setState(() {
+                      selectedWallet = "";
+                      selectedWalletType = "";
+                      amount = 0;
+                    }),
+                  )),
+              if (formFields != null &&
+                  formFields.isNotEmpty &&
+                  selectedWalletType != "")
+                Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Button(
+                        label: appBloc.state.isBTConnected
+                            ? "REQUEST"
+                            : "PRINTER NOT CONNECTED",
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 20.0),
+                        backgroundColor: ACCENT_SECONDARY,
+                        borderColor: Colors.transparent,
+                        isLoading: billBloc.state.requestStatus.isLoading,
+                        fontSize: 21,
+                        onPress: appBloc.state.isBTConnected
+                            ? () {
+                                if (formKey.currentState!.validate()) {
+                                  handleRequest();
+                                }
+                              }
+                            : null)),
               SingleChildScrollView(
                 child: Container(
                   padding: const EdgeInsets.only(bottom: 100),
@@ -519,46 +622,6 @@ class _WalletsState extends State<Wallets> {
                   ),
                 ),
               ),
-              Positioned(
-                  bottom: 0,
-                  left: 0,
-                  child: Button(
-                    label: "BACK",
-                    fontSize: 21,
-                    icon: Icons.chevron_left_rounded,
-                    textColor: Colors.black87,
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10.0, horizontal: 20.0),
-                    onPress: () => setState(() {
-                      selectedWallet = "";
-                      selectedWalletType = "";
-                      amount = 0;
-                    }),
-                  )),
-              if (formFields != null &&
-                  formFields.isNotEmpty &&
-                  selectedWalletType != "")
-                Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Button(
-                        label: appBloc.state.isBTConnected
-                            ? "REQUEST"
-                            : "PRINTER NOT CONNECTED",
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 20.0),
-                        backgroundColor: ACCENT_SECONDARY,
-                        borderColor: Colors.transparent,
-                        isLoading: billBloc.state.requestStatus.isLoading,
-                        fontSize: 21,
-                        onPress: appBloc.state.isBTConnected
-                            ? () {
-                                if (formKey.currentState!.validate()) {
-                                  handleRequest();
-                                }
-                              }
-                            : null)),
             ],
           ),
         ),
@@ -571,15 +634,11 @@ class _WalletsState extends State<Wallets> {
           showTopSnackBar(
               Overlay.of(context),
               const CustomSnackBar.error(
-                message: "Server if offline",
+                message: "Server is offline",
               ),
               snackBarPosition: SnackBarPosition.bottom,
               animationDuration: const Duration(milliseconds: 700),
               displayDuration: const Duration(seconds: 1));
-        }
-
-        if (state.requestStatus.isSuccess) {
-          Navigator.pushNamed(context, '/request-success');
         }
       },
       child: appBloc.state.selectedBranch == null

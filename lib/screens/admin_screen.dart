@@ -7,7 +7,6 @@ import 'package:velayo_flutterapp/utilities/constant.dart';
 import 'package:velayo_flutterapp/utilities/shared_prefs.dart';
 import 'package:velayo_flutterapp/widgets/branch_chooser.dart';
 import 'package:velayo_flutterapp/widgets/button.dart';
-import 'package:velayo_flutterapp/widgets/pin_update.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -98,47 +97,8 @@ class _AdminScreenState extends State<AdminScreen> {
           }
         case 1:
           {
-            return Material(
-              color: selectedButton != admin_home[i] ||
-                      appBloc.state.selectedBranch == null
-                  ? Colors.transparent
-                  : ACCENT_SECONDARY,
-              borderRadius: BorderRadius.circular(10),
-              child: InkWell(
-                onTap: appBloc.state.selectedBranch == null
-                    ? null
-                    : () {
-                        setState(() => selectedButton = admin_home[i]);
-
-                        showDialog(
-                            context: context,
-                            builder: (context) {
-                              return const PinUpdate();
-                            });
-                      },
-                hoverColor: appBloc.state.selectedBranch == null
-                    ? Colors.transparent
-                    : ACCENT_SECONDARY.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    height: 100,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: ACCENT_SECONDARY),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: Text(
-                        admin_home[i],
-                        style: TextStyle(
-                            fontSize: 22.0,
-                            color: selectedButton == admin_home[i]
-                                ? Colors.white
-                                : Colors.black),
-                      ),
-                    )),
-              ),
-            );
+            // nothing, this is pin update before
+            return Container();
           }
         default:
           return Container();

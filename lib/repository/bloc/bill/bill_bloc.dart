@@ -21,6 +21,7 @@ class BillsBloc extends Bloc<BillEvents, BillState> {
     try {
       emit(state.copyWith(status: BillStatus.loading));
       final bills = await repo.getBills();
+
       emit(
         state.copyWith(
           status: BillStatus.success,

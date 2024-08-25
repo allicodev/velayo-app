@@ -26,3 +26,8 @@ class UpdatePin extends AppEvents {
 }
 
 class InitBluetooth extends AppEvents {}
+
+class UpdateBluetooth extends AppEvents {
+  bool isConnected;
+  UpdateBluetooth({required this.isConnected});
+}

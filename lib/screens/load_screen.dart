@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,6 +35,61 @@ class _LoadScreenState extends State<LoadScreen> {
   String promo = "";
   double amount = 0;
 
+  BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final appBloc = BlocProvider.of<AppBloc>(context);
+    BlocProvider.of<AppBloc>(context).add(GetSettings());
+
+    // handle bluetooth status change
+    bluetooth.onStateChanged().listen((_state) {
+      switch (_state) {
+        case BlueThermalPrinter.CONNECTED:
+          appBloc.add(UpdateBluetooth(isConnected: true));
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.success(
+                message: "Bluetooth Connected",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 1));
+          break;
+        case BlueThermalPrinter.DISCONNECTED:
+        case BlueThermalPrinter.STATE_OFF:
+          appBloc.add(UpdateBluetooth(isConnected: false));
+          showTopSnackBar(
+              Overlay.of(context),
+              const CustomSnackBar.error(
+                message: "Bluetooth is Disconnected",
+              ),
+              snackBarPosition: SnackBarPosition.bottom,
+              animationDuration: const Duration(milliseconds: 700),
+              displayDuration: const Duration(seconds: 1));
+          break;
+        case BlueThermalPrinter.STATE_ON:
+          if (!appBloc.state.isBTConnected) {
+            showTopSnackBar(
+                Overlay.of(context),
+                const CustomSnackBar.success(
+                  message: "Bluetooth is turned on",
+                ),
+                snackBarPosition: SnackBarPosition.bottom,
+                animationDuration: const Duration(milliseconds: 700),
+                displayDuration: const Duration(seconds: 1));
+            appBloc.add(UpdateBluetooth(isConnected: true));
+          }
+
+          break;
+        default:
+          return;
+      }
+    });
+  }
+
   bool isDisabled(Settings? settings, String name) {
     if (settings?.disabled_eload != null &&
         (settings?.disabled_eload.isNotEmpty ?? false)) {
@@ -62,7 +118,7 @@ class _LoadScreenState extends State<LoadScreen> {
   handleRequest() async {
     Branch? currentBranch =
         BlocProvider.of<AppBloc>(context).state.selectedBranch;
-    int lastQueue = BlocProvider.of<UtilBloc>(context).state.lastQueue;
+    int lastQueue = BlocProvider.of<UtilBloc>(context).state.lastQueue + 1;
 
     RequestTransaction tran = RequestTransaction(
         type: "eload",
@@ -79,16 +135,18 @@ class _LoadScreenState extends State<LoadScreen> {
         amount: amount,
         branchId: currentBranch?.id ?? "",
         isOnlinePayment: false,
-        queue: lastQueue + 1);
+        queue: lastQueue);
 
     BlocProvider.of<BillsBloc>(context).add(ReqTransaction(
         requestTransaction: tran,
         onDone: (data) {
+          Future.delayed(const Duration(milliseconds: 100));
+
           Map<String, dynamic> request = {
             "transactionId": data["_id"],
             "branchId": data["branchId"],
             "billingType": "eload",
-            "queue": data["queue"]
+            "queue": lastQueue
           };
 
           BlocProvider.of<UtilBloc>(context).add(NewQueue(
@@ -96,22 +154,23 @@ class _LoadScreenState extends State<LoadScreen> {
               branchId: data["branchId"],
               callback: (resp) async {
                 if (resp) {
-                  await Printer.printQueue(
-                          BlocProvider.of<UtilBloc>(context).state.lastQueue)
-                      .then((e) {
-                    if (e) {
+                  await Printer.printQueue(lastQueue).then((e) {
+                    if (e is bool && e) {
                       Navigator.pushNamed(context, '/request-success');
+                    } else {
+                      showTopSnackBar(
+                          Overlay.of(context),
+                          CustomSnackBar.error(
+                            message: e,
+                          ),
+                          snackBarPosition: SnackBarPosition.bottom,
+                          animationDuration: const Duration(milliseconds: 700),
+                          displayDuration: const Duration(seconds: 1));
                     }
                   });
                 }
               }));
         }));
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    BlocProvider.of<AppBloc>(context).add(GetSettings());
   }
 
   @override
@@ -124,15 +183,11 @@ class _LoadScreenState extends State<LoadScreen> {
           showTopSnackBar(
               Overlay.of(context),
               const CustomSnackBar.error(
-                message: "Server if offline",
+                message: "Server is offline",
               ),
               snackBarPosition: SnackBarPosition.bottom,
               animationDuration: const Duration(milliseconds: 700),
               displayDuration: const Duration(seconds: 1));
-        }
-
-        if (state.requestStatus.isSuccess) {
-          Navigator.pushNamed(context, '/request-success');
         }
       },
       child: BlocBuilder<AppBloc, AppState>(builder: (context, state) {
@@ -327,7 +382,7 @@ class _LoadScreenState extends State<LoadScreen> {
                                     margin: const EdgeInsets.only(top: 10.0),
                                     onPress: isDisabled(state.settings,
                                                 selectedProvider) ||
-                                            state.isBTConnected
+                                            !state.isBTConnected
                                         ? null
                                         : () {
                                             if (formKey.currentState!
