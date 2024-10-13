@@ -39,6 +39,7 @@ flutter:
   assets:
     - assets/images/
     - assets/lottie/
+    - shorebird.yaml
 
   fonts:
     - family: Abel

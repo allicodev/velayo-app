@@ -121,7 +121,6 @@ class _AdminScreenState extends State<AdminScreen> {
                         child: Button(
                           label: "SAVE AND EXIT",
                           fontSize: 25,
-                          icon: Icons.settings_outlined,
                           textColor: Colors.white,
                           borderColor: Colors.transparent,
                           padding: const EdgeInsets.symmetric(

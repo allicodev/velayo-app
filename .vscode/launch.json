@@ -19,7 +19,14 @@
       "args": ["-d", "092253733E002055"]
     },
     {
-      "name": "Alli-emulator",
+      "name": "Alli-emulator (debug)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "deviceId": "emulator-5554"
+    },
+    {
+      "name": "Alli-emulator (release)",
       "request": "launch",
       "type": "dart",
       "flutterMode": "release",

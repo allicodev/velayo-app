@@ -31,17 +31,17 @@ class BranchChooser extends StatelessWidget {
                           ? const ErrorScreen(title: "Fetching Branches Error")
                           : Container(
                               width: MediaQuery.of(context).size.width * 0.25,
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.all(8.0),
                               decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12.0)),
+                                  borderRadius: BorderRadius.circular(8.0)),
                               child: Column(
                                   children: List.generate(state.branches.length,
                                       (index) {
                                 return Container(
                                   margin: index == state.branches.length - 1
                                       ? null
-                                      : const EdgeInsets.only(bottom: 16.0),
+                                      : const EdgeInsets.only(bottom: 8.0),
                                   child: Material(
                                     color: Colors.transparent,
                                     child: InkWell(
@@ -63,7 +63,7 @@ class BranchChooser extends StatelessWidget {
                                         padding: const EdgeInsets.all(24.0),
                                         decoration: BoxDecoration(
                                             borderRadius:
-                                                BorderRadius.circular(8.0),
+                                                BorderRadius.circular(4.0),
                                             border: Border.all(
                                                 color: Colors.black38)),
                                         child: Column(children: [
