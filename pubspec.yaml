@@ -23,6 +23,8 @@ dependencies:
   top_snackbar_flutter: ^3.1.0
   lottie: ^3.1.2
   blue_thermal_printer: ^1.2.3
+  flutter_keyboard_visibility: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 dev_dependencies:
   flutter_test:
@@ -42,3 +44,6 @@ flutter:
     - family: Abel
       fonts:
         - asset: assets/fonts/Abel-Regular.ttf
+flutter_icons:
+  android: true
+  image_path: "assets/images/image-home1.png"

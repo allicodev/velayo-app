@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:top_snackbar_flutter/custom_snack_bar.dart';
-import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import 'package:velayo_flutterapp/provider/route_generator.dart';
 import 'package:velayo_flutterapp/repository/bloc/app/app_bloc.dart';
 import 'package:velayo_flutterapp/repository/bloc/bill/bill_bloc.dart';

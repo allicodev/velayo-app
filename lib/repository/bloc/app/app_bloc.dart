@@ -112,7 +112,10 @@ class AppBloc extends Bloc<AppEvents, AppState>
     emit(state.copyWith(isBTConnected: event.isConnected));
   }
 
+  // helpers
+
   _showSnackBar(String status, String message, Emitter<AppState> emit) {
+    emit(state.copyWith(isBTConnected: status == "SUCCESS"));
     showTopSnackBar(
         navigatorKey.currentState!.overlay!,
         status == "ERROR"

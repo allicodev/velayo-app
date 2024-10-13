@@ -8,7 +8,7 @@ const ACCENT_SECONDARY = Color.fromARGB(255, 44, 125, 179);
 const String IS_PODUCTION = "prod"; // dev | prod
 
 getBaseUrl() {
-  // return "https://e428-110-54-182-103.ngrok-free.app";
+  // return "https://70f8-158-62-52-14.ngrok-free.app";
   if (IS_PODUCTION == "prod") return "https://velayo-eservice.vercel.app";
   if (IS_PODUCTION == "dev") return Env.LocalUrl;
 }
@@ -23,7 +23,7 @@ List<HomeButtonValues> home_offers = [
   HomeButtonValues(title: "Shopee Collect", icon: Icons.miscellaneous_services),
 ];
 
-List<String> admin_home = ['Select/Switch Branch', "Update PIN"];
+List<String> admin_home = ['Select/Switch Branch'];
 const LOAD_PORTALS = ["TM", "GLOBE", "SMART", "TNT", "DITO", "GOMO"];
 
 const PESO = "₱";

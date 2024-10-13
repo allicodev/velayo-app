@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
@@ -5,6 +6,7 @@ import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:intl/intl.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
@@ -48,7 +50,11 @@ class _BillsState extends State<Bills> {
 
   bool isOnlinePay = false;
 
+  late StreamSubscription<bool> keyboardSubscription;
+
   BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
+  bool isKeyboardUp = false;
 
   updateInputData(String key, dynamic value) {
     setState(() => inputData[key.toLowerCase().split(" ").join(("_"))] = value);
@@ -107,7 +113,20 @@ class _BillsState extends State<Bills> {
       }
     });
 
+    // handle keyboard visibility events
+    var keyboardVisibilityController = KeyboardVisibilityController();
+    keyboardSubscription =
+        keyboardVisibilityController.onChange.listen((bool visible) {
+      setState(() => isKeyboardUp = visible);
+    });
+
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    keyboardSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -578,51 +597,53 @@ class _BillsState extends State<Bills> {
                   ),
                 ),
               ),
-              Positioned(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 0,
-                child: Button(
-                  label: "BACK",
-                  fontSize: 21.0,
-                  textColor: Colors.black87,
-                  backgroundColor: Colors.white,
-                  borderColor: Colors.black45,
-                  icon: Icons.chevron_left_rounded,
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 10.0, horizontal: 20.0),
-                  onPress: () => setState(() {
-                    selectedBiller = "";
-                    amount = 0;
-                  }),
-                ),
-              ),
-              Positioned(
-                  bottom: 0,
-                  right: 0,
+              if (!isKeyboardUp)
+                Positioned(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 0,
                   child: Button(
-                      isLoading: billBloc.state.requestStatus.isLoading,
-                      label: appBloc.state.isBTConnected
-                          ? "REQUEST"
-                          : "PRINTER NOT CONNECTED",
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 10.0, horizontal: 20.0),
-                      backgroundColor: ACCENT_SECONDARY,
-                      borderColor: Colors.transparent,
-                      fontSize: 21.0,
-                      onPress: appBloc.state.isBTConnected
-                          ? () {
-                              if (formKey.currentState!.validate()) {
-                                if (isOnlinePay) {
-                                  if (formKey2.currentState!.validate()) {
-                                    handleRequest();
-                                  }
+                    label: "BACK",
+                    fontSize: 21.0,
+                    textColor: Colors.black87,
+                    backgroundColor: Colors.white,
+                    borderColor: Colors.black45,
+                    icon: Icons.chevron_left_rounded,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10.0, horizontal: 20.0),
+                    onPress: () => setState(() {
+                      selectedBiller = "";
+                      amount = 0;
+                    }),
+                  ),
+                ),
+              if (!isKeyboardUp)
+                Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Button(
+                        isLoading: billBloc.state.requestStatus.isLoading,
+                        label: appBloc.state.isBTConnected
+                            ? "REQUEST"
+                            : "PRINTER NOT CONNECTED",
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 20.0),
+                        backgroundColor: ACCENT_SECONDARY,
+                        borderColor: Colors.transparent,
+                        fontSize: 21.0,
+                        onPress: appBloc.state.isBTConnected
+                            ? () {
+                                if (formKey.currentState!.validate()) {
+                                  if (isOnlinePay) {
+                                    if (formKey2.currentState!.validate()) {
+                                      handleRequest();
+                                    }
 
-                                  return;
+                                    return;
+                                  }
+                                  handleRequest();
                                 }
-                                handleRequest();
                               }
-                            }
-                          : null)),
+                            : null)),
             ],
           ),
         ),

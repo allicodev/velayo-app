@@ -1,5 +1,8 @@
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
@@ -40,6 +43,10 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   void initState() {
     final appBloc = BlocProvider.of<AppBloc>(context);
+
+    if (!appBloc.state.isBTConnected) {
+      appBloc.add(InitBluetooth());
+    }
 
     animationController = AnimationController(
       vsync: this,
@@ -270,10 +277,23 @@ class _HomeScreenState extends State<HomeScreen>
                 fontSize: 42, fontFamily: 'abel', fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 15.0),
-          const Text(
-            "Please select an offer list to the left side to continue or just print a queue",
-            style: TextStyle(fontSize: 22, fontFamily: 'abel'),
-          ),
+          RichText(
+              text: TextSpan(children: [
+            const TextSpan(
+              text:
+                  'Please select an offer list to the left side to continue or just print a ',
+              style: TextStyle(
+                  fontSize: 22, fontFamily: 'abel', color: Colors.black),
+            ),
+            TextSpan(
+                text: 'queue',
+                style: const TextStyle(
+                    fontSize: 22, fontFamily: 'abel', color: Colors.black),
+                recognizer: TapGestureRecognizer()
+                  ..onTap = () {
+                    showAdminPin();
+                  })
+          ])),
           const SizedBox(height: 5.0),
           Transform.scale(
               scale: _scaleTransformValue,

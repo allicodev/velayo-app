@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
@@ -5,6 +6,7 @@ import 'package:dropdown_textfield/dropdown_textfield.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:intl/intl.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
@@ -42,6 +44,9 @@ class _WalletsState extends State<Wallets> {
   Map<String, dynamic> inputData = {};
 
   BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
+
+  late StreamSubscription<bool> keyboardSubscription;
+  bool isKeyboardUp = false;
 
   @override
   void initState() {
@@ -92,7 +97,20 @@ class _WalletsState extends State<Wallets> {
       }
     });
 
+    // handle keyboard visibility events
+    var keyboardVisibilityController = KeyboardVisibilityController();
+    keyboardSubscription =
+        keyboardVisibilityController.onChange.listen((bool visible) {
+      setState(() => isKeyboardUp = visible);
+    });
+
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    keyboardSubscription.cancel();
+    super.dispose();
   }
 
   updateInputDate(String key, dynamic value) {
@@ -500,46 +518,6 @@ class _WalletsState extends State<Wallets> {
           margin: const EdgeInsets.only(top: 15),
           child: Stack(
             children: [
-              Positioned(
-                  bottom: 0,
-                  left: 0,
-                  child: Button(
-                    label: "BACK",
-                    fontSize: 21,
-                    icon: Icons.chevron_left_rounded,
-                    textColor: Colors.black87,
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10.0, horizontal: 20.0),
-                    onPress: () => setState(() {
-                      selectedWallet = "";
-                      selectedWalletType = "";
-                      amount = 0;
-                    }),
-                  )),
-              if (formFields != null &&
-                  formFields.isNotEmpty &&
-                  selectedWalletType != "")
-                Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Button(
-                        label: appBloc.state.isBTConnected
-                            ? "REQUEST"
-                            : "PRINTER NOT CONNECTED",
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 20.0),
-                        backgroundColor: ACCENT_SECONDARY,
-                        borderColor: Colors.transparent,
-                        isLoading: billBloc.state.requestStatus.isLoading,
-                        fontSize: 21,
-                        onPress: appBloc.state.isBTConnected
-                            ? () {
-                                if (formKey.currentState!.validate()) {
-                                  handleRequest();
-                                }
-                              }
-                            : null)),
               SingleChildScrollView(
                 child: Container(
                   padding: const EdgeInsets.only(bottom: 100),
@@ -622,6 +600,48 @@ class _WalletsState extends State<Wallets> {
                   ),
                 ),
               ),
+              if (!isKeyboardUp)
+                Positioned(
+                    bottom: 0,
+                    left: 0,
+                    child: Button(
+                      label: "BACK",
+                      fontSize: 21,
+                      icon: Icons.chevron_left_rounded,
+                      textColor: Colors.black87,
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 10.0, horizontal: 20.0),
+                      onPress: () => setState(() {
+                        selectedWallet = "";
+                        selectedWalletType = "";
+                        amount = 0;
+                      }),
+                    )),
+              if (formFields != null &&
+                  formFields.isNotEmpty &&
+                  selectedWalletType != "" &&
+                  !isKeyboardUp)
+                Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Button(
+                        label: appBloc.state.isBTConnected
+                            ? "REQUEST"
+                            : "PRINTER NOT CONNECTED",
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 10.0, horizontal: 20.0),
+                        backgroundColor: ACCENT_SECONDARY,
+                        borderColor: Colors.transparent,
+                        isLoading: billBloc.state.requestStatus.isLoading,
+                        fontSize: 21,
+                        onPress: appBloc.state.isBTConnected
+                            ? () {
+                                if (formKey.currentState!.validate()) {
+                                  handleRequest();
+                                }
+                              }
+                            : null)),
             ],
           ),
         ),

@@ -22,6 +22,7 @@
       "name": "Alli-emulator",
       "request": "launch",
       "type": "dart",
+      "flutterMode": "release",
       "deviceId": "emulator-5554"
     },
     {

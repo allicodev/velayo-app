@@ -117,14 +117,16 @@ class _AdminScreenState extends State<AdminScreen> {
                     children: [
                       Positioned(
                         bottom: 0,
-                        left: 0,
+                        right: 0,
                         child: Button(
-                          label: "BACK",
+                          label: "SAVE AND EXIT",
                           fontSize: 25,
-                          icon: Icons.chevron_left_rounded,
-                          textColor: Colors.black87,
-                          width: 170,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          icon: Icons.settings_outlined,
+                          textColor: Colors.white,
+                          borderColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 20, horizontal: 10),
+                          backgroundColor: ACCENT_PRIMARY,
                           onPress: () {
                             if (Navigator.canPop(context)) {
                               Navigator.pop(context);
